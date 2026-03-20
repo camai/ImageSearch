@@ -27,7 +27,6 @@ class SearchViewModel @Inject constructor(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    // StateFlow debouncing and filtering empty strings before fetching
     val searchResults: Flow<PagingData<ImageItem>> = _query
         .debounce(1000L)
         .filter { it.isNotBlank() }
