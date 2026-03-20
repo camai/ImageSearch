@@ -5,7 +5,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.jg.imagesearch.core.data.api.ImagePagingSource
 import com.jg.imagesearch.core.data.api.NaverImageApi
-import com.jg.imagesearch.core.data.api.dto.toDomainModel
 import com.jg.imagesearch.core.domain.repository.ImageRepository
 import com.jg.imagesearch.core.model.DataResult
 import com.jg.imagesearch.core.model.ImageItem
