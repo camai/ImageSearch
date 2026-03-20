@@ -18,6 +18,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
 import kotlinx.coroutines.launch
@@ -33,8 +34,8 @@ fun ViewerScreen(
         viewModel.initialize(selectedItem)
     }
 
-    val images by viewModel.images.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val images by viewModel.images.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
