@@ -4,6 +4,7 @@ import com.jg.imagesearch.core.data.local.dao.BookmarkDao
 import com.jg.imagesearch.core.data.local.entity.toDomainModel
 import com.jg.imagesearch.core.data.local.entity.toEntity
 import com.jg.imagesearch.core.domain.repository.BookmarkRepository
+import com.jg.imagesearch.core.model.DataResult
 import com.jg.imagesearch.core.model.ImageItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,16 +19,31 @@ class BookmarkRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addBookmark(imageItem: ImageItem) {
-        bookmarkDao.insertBookmark(imageItem.toEntity())
+    override suspend fun addBookmark(imageItem: ImageItem): DataResult<Boolean, String> {
+        return try {
+            bookmarkDao.insertBookmark(imageItem.toEntity())
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            DataResult.Fail(e.message ?: "Unknown Error")
+        }
     }
 
-    override suspend fun removeBookmark(imageItem: ImageItem) {
-        bookmarkDao.deleteBookmark(imageItem.toEntity())
+    override suspend fun removeBookmark(imageItem: ImageItem): DataResult<Boolean, String> {
+        return try {
+            bookmarkDao.deleteBookmark(imageItem.toEntity())
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            DataResult.Fail(e.message ?: "Unknown Error")
+        }
     }
 
-    override suspend fun removeBookmarks(imageItems: List<ImageItem>) {
-        bookmarkDao.deleteBookmarks(imageItems.map { it.toEntity() })
+    override suspend fun removeBookmarks(imageItems: List<ImageItem>): DataResult<Boolean, String> {
+        return try {
+            bookmarkDao.deleteBookmarks(imageItems.map { it.toEntity() })
+            DataResult.Success(true)
+        } catch (e: Exception) {
+            DataResult.Fail(e.message ?: "Unknown Error")
+        }
     }
 
     override suspend fun isBookmarked(link: String): Boolean {

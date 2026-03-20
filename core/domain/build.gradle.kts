@@ -10,4 +10,5 @@ dependencies {
     implementation(project(":core:model"))
     implementation(libs.paging.runtime)
     implementation(libs.kotlinx.serialization.json)
+    implementation("javax.inject:javax.inject:1")
 }
