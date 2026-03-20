@@ -35,4 +35,10 @@ abstract class UseCaseModule {
     abstract fun bindRemoveBookmarksUseCase(
         impl: RemoveBookmarksUseCaseImpl
     ): RemoveBookmarksUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindGetRandomImagesUseCase(
+        impl: GetRandomImagesUseCaseImpl
+    ): GetRandomImagesUseCase
 }
