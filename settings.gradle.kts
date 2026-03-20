@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -21,4 +22,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "ImageSearch"
 include(":app")
- 
+include(":core:data")
+include(":core:domain")
+include(":core:model")
+include(":feature:main")
+include(":feature:bookmark")
+include(":feature:search")
+include(":feature:viewer")
