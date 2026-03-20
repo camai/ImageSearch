@@ -5,10 +5,13 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.jg.imagesearch.core.data.api.ImagePagingSource
 import com.jg.imagesearch.core.data.api.NaverImageApi
+import com.jg.imagesearch.core.data.api.dto.toDomainModel
 import com.jg.imagesearch.core.domain.repository.ImageRepository
+import com.jg.imagesearch.core.model.DataResult
 import com.jg.imagesearch.core.model.ImageItem
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import kotlin.random.Random
 
 class ImageRepositoryImpl @Inject constructor(
     private val api: NaverImageApi
@@ -21,5 +24,15 @@ class ImageRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = { ImagePagingSource(api, query) }
         ).flow
+    }
+
+    override suspend fun getRandomImages(query: String, display: Int): DataResult<List<ImageItem>, String> {
+        return try {
+            val randomStart = Random.nextInt(1, 100)
+            val response = api.searchImages(query = query, display = display, start = randomStart)
+            DataResult.Success(response.items.map { it.toDomainModel() }.shuffled())
+        } catch (e: Exception) {
+            DataResult.Fail(e.message ?: "Unknown API Error")
+        }
     }
 }
