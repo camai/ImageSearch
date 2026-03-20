@@ -26,6 +26,9 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                     targetCompatibility = org.gradle.api.JavaVersion.VERSION_17
                 }
             }
+            tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
+                kotlinOptions.jvmTarget = "17"
+            }
         }
     }
 }
