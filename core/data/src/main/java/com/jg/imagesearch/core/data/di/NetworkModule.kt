@@ -1,5 +1,6 @@
 package com.jg.imagesearch.core.data.di
 
+import com.jg.imagesearch.core.data.BuildConfig
 import com.jg.imagesearch.core.data.api.NaverImageApi
 import dagger.Module
 import dagger.Provides
@@ -17,9 +18,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = "https://openapi.naver.com/"
-    private const val CLIENT_ID = "YOUR_CLIENT_ID" // TODO: Add real Naver Client ID
-    private const val CLIENT_SECRET = "YOUR_CLIENT_SECRET" // TODO: Add real Naver Client Secret
 
     @Provides
     @Singleton
@@ -37,8 +35,8 @@ object NetworkModule {
 
         val headerInterceptor = Interceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("X-Naver-Client-Id", CLIENT_ID)
-                .addHeader("X-Naver-Client-Secret", CLIENT_SECRET)
+                .addHeader("X-Naver-Client-Id", BuildConfig.NAVER_CLIENT_ID)
+                .addHeader("X-Naver-Client-Secret", BuildConfig.NAVER_CLIENT_SECRET)
                 .build()
             chain.proceed(request)
         }
@@ -54,7 +52,7 @@ object NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

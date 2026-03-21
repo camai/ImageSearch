@@ -39,12 +39,11 @@ class ViewerViewModel @Inject constructor(
         )
 
     fun initialize(selectedItem: ImageItem) {
-        if (_rawImages.value.isNotEmpty()) return // Already initialized
+        if (_rawImages.value.isNotEmpty()) return
         viewModelScope.launch {
             _isLoading.value = true
-            _rawImages.value = listOf(selectedItem) // show selected item first immediately
+            _rawImages.value = listOf(selectedItem)
             
-            // fetch 30 random images
             when (val result = getRandomImagesUseCase("만화", 30)) {
                 is DomainResult.Success -> {
                     val filtered = result.data.filter { it.link != selectedItem.link }.take(30)

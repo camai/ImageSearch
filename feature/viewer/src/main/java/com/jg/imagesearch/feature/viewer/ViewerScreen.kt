@@ -1,8 +1,11 @@
 package com.jg.imagesearch.feature.viewer
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -86,6 +89,18 @@ fun ZoomableImageCard(
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
 
+    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+        scale = (scale * zoomChange).coerceIn(1f, 3f)
+        if (scale > 1f) {
+            val maxOffset = (scale - 1) * 300f
+            offsetX = (offsetX + offsetChange.x).coerceIn(-maxOffset, maxOffset)
+            offsetY = (offsetY + offsetChange.y).coerceIn(-maxOffset, maxOffset)
+        } else {
+            offsetX = 0f
+            offsetY = 0f
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -97,22 +112,11 @@ fun ZoomableImageCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(400.dp)
-                    .pointerInput(Unit) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            scale = (scale * zoom).coerceIn(1f, 3f)
-                            if (scale > 1f) {
-                                val maxOffset = (scale - 1) * 300 // roughly adjust bounding
-                                offsetX = (offsetX + pan.x).coerceIn(-maxOffset, maxOffset)
-                                offsetY = (offsetY + pan.y).coerceIn(-maxOffset, maxOffset)
-                            } else {
-                                offsetX = 0f
-                                offsetY = 0f
-                            }
-                        }
-                    }
+                    .clip(RectangleShape)
+                    .transformable(state = state)
             ) {
                 AsyncImage(
-                    model = item.link, // Used original link for better quality in viewer!
+                    model = item.link,
                     contentDescription = item.title,
                     modifier = Modifier
                         .fillMaxSize()
@@ -156,7 +160,7 @@ fun ViewerImageCard(
     ) {
         Box(contentAlignment = Alignment.TopEnd) {
             AsyncImage(
-                model = item.thumbnail, // Random list items use thumbnail exactly like search list
+                model = item.thumbnail,
                 contentDescription = item.title,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -38,5 +38,9 @@ gradlePlugin {
             id = "imagesearch.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"
         }
+        register("androidNetwork") {
+            id = "imagesearch.android.network"
+            implementationClass = "AndroidNetworkConventionPlugin"
+        }
     }
 }

@@ -40,6 +40,7 @@ fun SearchScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     var isRefreshing by remember { mutableStateOf(false) }
+    var textValue by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(query)) }
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
@@ -51,16 +52,22 @@ fun SearchScreen(
                 shadowElevation = 4.dp
             ) {
                 OutlinedTextField(
-                    value = query,
-                    onValueChange = viewModel::onQueryChanged,
+                    value = textValue,
+                    onValueChange = { newValue ->
+                        textValue = newValue
+                        viewModel.onQueryChanged(newValue.text)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     placeholder = { Text("검색어를 입력하세요 (예: 만화)") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = "검색") },
                     trailingIcon = {
-                        if (query.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.onQueryChanged("") }) {
+                        if (textValue.text.isNotEmpty()) {
+                            IconButton(onClick = { 
+                                textValue = androidx.compose.ui.text.input.TextFieldValue("")
+                                viewModel.onQueryChanged("") 
+                            }) {
                                 Icon(Icons.Default.Clear, contentDescription = "지우기")
                             }
                         }

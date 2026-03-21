@@ -1,6 +1,7 @@
 plugins {
     id("imagesearch.android.library")
     id("imagesearch.android.hilt")
+    id("imagesearch.android.network")
     alias(libs.plugins.kotlin.serialization)
 }
 
