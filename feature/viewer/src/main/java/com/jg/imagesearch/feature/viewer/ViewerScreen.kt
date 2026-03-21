@@ -33,8 +33,10 @@ fun ViewerRoute(
     onBack: () -> Unit,
     viewModel: ViewerViewModel = hiltViewModel()
 ) {
+    val defaultQuery = stringResource(R.string.default_related_query)
+
     LaunchedEffect(selectedItem) {
-        viewModel.initialize(selectedItem)
+        viewModel.initialize(selectedItem, defaultQuery)
     }
 
     val images by viewModel.images.collectAsStateWithLifecycle()

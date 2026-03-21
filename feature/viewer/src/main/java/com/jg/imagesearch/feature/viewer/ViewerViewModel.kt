@@ -47,18 +47,17 @@ class ViewerViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    fun initialize(selectedItem: ImageItem) {
+    fun initialize(selectedItem: ImageItem, defaultQuery: String) {
         if (_rawImages.value.isNotEmpty()) return
         viewModelScope.launch {
             _isLoading.value = true
             _rawImages.value = listOf(selectedItem)
 
-
             val relatedQuery = selectedItem.title
                 .replace(Regex("<[^>]*>"), "")
                 .trim()
                 .take(20)
-                .ifBlank { "이미지" }
+                .ifBlank { defaultQuery }
 
             when (val result = getRandomImagesUseCase(relatedQuery, 30)) {
                 is DomainResult.Success -> {
