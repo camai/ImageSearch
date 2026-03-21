@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import com.jg.imagesearch.feature.search.R
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,7 +48,26 @@ fun SearchScreen(
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val configuration = LocalConfiguration.current
+    val columns = if (configuration.screenWidthDp >= 600) 4 else 2
+
+    LaunchedEffect(searchResults.loadState.refresh) {
+        val refreshState = searchResults.loadState.refresh
+        if (refreshState is LoadState.Error) {
+            val result = snackbarHostState.showSnackbar(
+                message = refreshState.error.localizedMessage ?: "Unknown Error",
+                actionLabel = "Retry",
+                duration = SnackbarDuration.Indefinite
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                searchResults.retry()
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -111,13 +131,25 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = GridCells.Fixed(columns),
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(4.dp)
                     ) {
-                        items(searchResults.itemCount) { index ->
-                            searchResults[index]?.let { item ->
-                                SearchImageCard(
+                        if (searchResults.loadState.refresh is LoadState.Loading && searchResults.itemCount == 0) {
+                            items(10) {
+                                Card(
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .fillMaxWidth()
+                                        .aspectRatio(1f)
+                                        .shimmerEffect(),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {}
+                            }
+                        } else {
+                            items(searchResults.itemCount) { index ->
+                                searchResults[index]?.let { item ->
+                                    SearchImageCard(
                                     item = item,
                                     onClick = {
                                         focusManager.clearFocus()
@@ -128,16 +160,19 @@ fun SearchScreen(
                             }
                         }
                         
-                        searchResults.apply {
-                            when {
-                                loadState.refresh is LoadState.Loading -> {
-                                    // initial loading is handled by indicator
-                                }
-                                loadState.append is LoadState.Loading -> {
-                                    // infinite scroll loading indicator could be placed here 
-                                }
+                        if (searchResults.loadState.append is LoadState.Loading) {
+                            items(columns) {
+                                Card(
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .fillMaxWidth()
+                                        .aspectRatio(1f)
+                                        .shimmerEffect(),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {}
                             }
                         }
+                        } // end of else
                     }
                 }
             }

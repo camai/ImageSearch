@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
 import com.jg.imagesearch.feature.bookmark.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -36,6 +37,9 @@ fun BookmarkScreen(
     val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
     var isSelectionMode by remember { mutableStateOf(false) }
     val selectedItems = remember { mutableStateListOf<ImageItem>() }
+
+    val configuration = LocalConfiguration.current
+    val columns = if (configuration.screenWidthDp >= 600) 4 else 2
 
     Scaffold(
         topBar = {
@@ -70,7 +74,7 @@ fun BookmarkScreen(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(columns),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
