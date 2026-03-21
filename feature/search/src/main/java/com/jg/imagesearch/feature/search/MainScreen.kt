@@ -40,8 +40,8 @@ import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
-fun SearchRoute(
-    viewModel: SearchViewModel = hiltViewModel(),
+fun MainRoute(
+    viewModel: MainViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit,
     onNavigateToLocalSearch: () -> Unit
 ) {
@@ -65,7 +65,7 @@ fun SearchRoute(
         }
     }
 
-    SearchScreen(
+    MainScreen(
         searchResults = searchResults,
         snackbarHostState = snackbarHostState,
         onBookmarkToggle = viewModel::toggleBookmark,
@@ -76,7 +76,7 @@ fun SearchRoute(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SearchScreen(
+private fun MainScreen(
     searchResults: LazyPagingItems<ImageItem>,
     snackbarHostState: SnackbarHostState,
     onBookmarkToggle: (ImageItem) -> Unit,
@@ -149,7 +149,7 @@ private fun SearchScreen(
                             contentType = searchResults.itemContentType { "image" }
                         ) { index ->
                             searchResults[index]?.let { item ->
-                                SearchImageCard(
+                                MainImageCard(
                                     item = item,
                                     onClick = {
                                         focusManager.clearFocus()
@@ -178,7 +178,7 @@ private fun SearchScreen(
 }
 
 @Composable
-private fun SearchImageCard(
+private fun MainImageCard(
     item: ImageItem,
     onClick: () -> Unit,
     onBookmarkToggle: () -> Unit

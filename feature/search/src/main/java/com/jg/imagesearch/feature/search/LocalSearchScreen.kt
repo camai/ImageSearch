@@ -104,7 +104,7 @@ private fun LocalSearchScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.local_search_back))
                     }
                     OutlinedTextField(
                         value = textValue,
@@ -145,14 +145,14 @@ private fun LocalSearchScreen(
         ) {
             if (query.isBlank()) {
                 Text(
-                    text = "로드된 데이터 탭에서 제목을 검색해보세요.",
+                    text = stringResource(id = R.string.local_search_empty_prompt),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else if (searchResults.loadState.refresh is LoadState.NotLoading && searchResults.itemCount == 0) {
                 Text(
-                    text = "검색 결과가 없습니다.",
+                    text = stringResource(id = R.string.local_search_empty_result),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

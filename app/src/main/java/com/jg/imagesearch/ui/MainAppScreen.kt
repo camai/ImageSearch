@@ -18,7 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.jg.imagesearch.feature.bookmark.BookmarkRoute
-import com.jg.imagesearch.feature.search.SearchRoute
+import com.jg.imagesearch.feature.search.MainRoute
 import com.jg.imagesearch.feature.search.LocalSearchRoute
 import com.jg.imagesearch.feature.viewer.ViewerRoute
 import com.jg.imagesearch.core.model.ImageItem
@@ -89,7 +89,7 @@ fun MainAppScreen() {
                 .consumeWindowInsets(innerPadding)
         ) {
             composable(Screen.Main.route) {
-                SearchRoute(
+                MainRoute(
                     onNavigateToViewer = { item ->
                         navController.navigate(Screen.Viewer.createRoute(item))
                     },
