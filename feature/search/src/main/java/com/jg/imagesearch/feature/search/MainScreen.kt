@@ -8,19 +8,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -37,14 +36,15 @@ import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
 import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.UiEffect
+import androidx.compose.ui.platform.LocalContext
+
 
 @Composable
-fun SearchRoute(
-    viewModel: SearchViewModel = hiltViewModel(),
+fun MainRoute(
+    viewModel: MainViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit,
-    onBack: () -> Unit
+    onNavigateToLocalSearch: () -> Unit
 ) {
-    val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -65,77 +65,53 @@ fun SearchRoute(
         }
     }
 
-    LocalSearchScreen(
-        query = query,
+    MainScreen(
         searchResults = searchResults,
         snackbarHostState = snackbarHostState,
-        onQueryChanged = viewModel::onQueryChanged,
         onBookmarkToggle = viewModel::toggleBookmark,
         onNavigateToViewer = onNavigateToViewer,
-        onBack = onBack
+        onNavigateToLocalSearch = onNavigateToLocalSearch
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LocalSearchScreen(
-    query: String,
+private fun MainScreen(
     searchResults: LazyPagingItems<ImageItem>,
     snackbarHostState: SnackbarHostState,
-    onQueryChanged: (String) -> Unit,
     onBookmarkToggle: (ImageItem) -> Unit,
     onNavigateToViewer: (ImageItem) -> Unit,
-    onBack: () -> Unit
+    onNavigateToLocalSearch: () -> Unit
 ) {
-    var textValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(query))
-    }
     val focusManager = LocalFocusManager.current
     val configuration = LocalConfiguration.current
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
 
+    LaunchedEffect(searchResults.loadState.refresh) {
+        val refreshState = searchResults.loadState.refresh
+        if (refreshState is LoadState.Error) {
+            val result = snackbarHostState.showSnackbar(
+                message = refreshState.error.localizedMessage ?: "Unknown Error",
+                actionLabel = "Retry",
+                duration = SnackbarDuration.Indefinite
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                searchResults.retry()
+            }
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 4.dp
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.local_search_back))
+            TopAppBar(
+                title = { Text(stringResource(id = R.string.nav_main)) },
+                actions = {
+                    IconButton(onClick = onNavigateToLocalSearch) {
+                        Icon(imageVector = Icons.Default.Search, contentDescription = stringResource(id = R.string.nav_search))
                     }
-                    OutlinedTextField(
-                        value = textValue,
-                        onValueChange = { newValue ->
-                            textValue = newValue
-                            onQueryChanged(newValue.text)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp, top = 8.dp, bottom = 8.dp),
-                        placeholder = { Text(stringResource(id = R.string.search_hint)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(id = R.string.search_desc)) },
-                        trailingIcon = {
-                            if (textValue.text.isNotEmpty()) {
-                                IconButton(onClick = {
-                                    textValue = TextFieldValue("")
-                                    onQueryChanged("")
-                                }) {
-                                    Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.clear_desc))
-                                }
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(
-                            onSearch = { focusManager.clearFocus() }
-                        ),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
                 }
-            }
+            )
         }
     ) { paddingValues ->
         Box(
@@ -143,40 +119,56 @@ private fun LocalSearchScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (query.isBlank()) {
-                Text(
-                    text = stringResource(id = R.string.local_search_empty_prompt),
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else if (searchResults.loadState.refresh is LoadState.NotLoading && searchResults.itemCount == 0) {
-                Text(
-                    text = stringResource(id = R.string.local_search_empty_result),
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
+            // derivedStateOf: loadState가 변경될 때만 재계산 → 불필요한 리컴포지션 차단
+            val isRefreshing by remember {
+                derivedStateOf { searchResults.loadState.refresh is LoadState.Loading }
+            }
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { searchResults.refresh() },
+                modifier = Modifier.fillMaxSize()
+            ) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columns),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(4.dp)
                 ) {
-                    items(
-                        count = searchResults.itemCount,
-                        key = searchResults.itemKey { it.link },
-                        contentType = searchResults.itemContentType { "image" }
-                    ) { index ->
-                        searchResults[index]?.let { item ->
-                            SearchImageCard(
-                                item = item,
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    onNavigateToViewer(item)
-                                },
-                                onBookmarkToggle = { onBookmarkToggle(item) }
+                    if (searchResults.loadState.refresh is LoadState.Loading && searchResults.itemCount == 0) {
+                        items(10) {
+                            ShimmerBox(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth()
+                                    .aspectRatio(1f)
                             )
+                        }
+                    } else {
+                        items(
+                            count = searchResults.itemCount,
+                            key = searchResults.itemKey { it.link },
+                            contentType = searchResults.itemContentType { "image" }
+                        ) { index ->
+                            searchResults[index]?.let { item ->
+                                MainImageCard(
+                                    item = item,
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        onNavigateToViewer(item)
+                                    },
+                                    onBookmarkToggle = { onBookmarkToggle(item) }
+                                )
+                            }
+                        }
+
+                        if (searchResults.loadState.append is LoadState.Loading) {
+                            items(columns) {
+                                ShimmerBox(
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .fillMaxWidth()
+                                        .aspectRatio(1f)
+                                )
+                            }
                         }
                     }
                 }
@@ -186,7 +178,7 @@ private fun LocalSearchScreen(
 }
 
 @Composable
-private fun SearchImageCard(
+private fun MainImageCard(
     item: ImageItem,
     onClick: () -> Unit,
     onBookmarkToggle: () -> Unit
@@ -220,9 +212,9 @@ private fun SearchImageCard(
             }
             Text(
                 text = item.title,
-                modifier = Modifier.padding(8.dp),
-                maxLines = 2,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                modifier = Modifier.padding(8.dp)
             )
         }
     }

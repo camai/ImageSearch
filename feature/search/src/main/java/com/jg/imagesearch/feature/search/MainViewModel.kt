@@ -6,7 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.jg.imagesearch.core.domain.usecase.GetBookmarksUseCase
-import com.jg.imagesearch.core.domain.usecase.SearchLocalImagesUseCase
+import com.jg.imagesearch.core.domain.usecase.SearchImagesUseCase
 import com.jg.imagesearch.core.domain.usecase.ToggleBookmarkUseCase
 import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
@@ -22,23 +22,15 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-class SearchViewModel @Inject constructor(
-    private val searchLocalImagesUseCase: SearchLocalImagesUseCase,
+class MainViewModel @Inject constructor(
+    private val searchImagesUseCase: SearchImagesUseCase,
     private val getBookmarksUseCase: GetBookmarksUseCase,
     private val toggleBookmarkUseCase: ToggleBookmarkUseCase
 ) : ViewModel() {
 
-    private val _query = MutableStateFlow("")
-    val query: StateFlow<String> = _query.asStateFlow()
-
-    private val _uiEffect = MutableSharedFlow<UiEffect>()
-    val uiEffect: SharedFlow<UiEffect> = _uiEffect.asSharedFlow()
-
-    val searchResults: Flow<PagingData<ImageItem>> = _query
-        .debounce(1000L)
-        .filter { it.isNotBlank() }
+    val searchResults: Flow<PagingData<ImageItem>> = flowOf("만화")
         .flatMapLatest { q ->
-            searchLocalImagesUseCase(q)
+            searchImagesUseCase(q)
                 .cachedIn(viewModelScope)
                 .combine(getBookmarksUseCase()) { pagingData, bookmarks ->
                     val bookmarkLinks = bookmarks.map { it.link }.toSet()
@@ -49,9 +41,9 @@ class SearchViewModel @Inject constructor(
         }
         .cachedIn(viewModelScope)
 
-    fun onQueryChanged(newQuery: String) {
-        _query.value = newQuery
-    }
+    // _uiEffect is moved down here to keep variables together
+    private val _uiEffect = MutableSharedFlow<UiEffect>()
+    val uiEffect: SharedFlow<UiEffect> = _uiEffect.asSharedFlow()
 
     fun toggleBookmark(item: ImageItem) {
         viewModelScope.launch {

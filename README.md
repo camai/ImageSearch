@@ -56,7 +56,7 @@ ImageSearch/
 │   ├── network/                  ← Retrofit, API Interface, DTO
 │   └── README.md                 ← Core 모듈 상세 문서
 ├── feature/
-│   ├── search/                   ← 이미지 검색 화면
+│   ├── search/                   ← 메인 탭(만화 자동 로드) 및 로컬 검색 화면
 │   ├── bookmark/                 ← 북마크 관리 화면
 │   └── viewer/                   ← 이미지 상세 뷰어
 ├── gradle/libs.versions.toml     ← 버전 카탈로그
@@ -69,6 +69,7 @@ ImageSearch/
 
 ### Presentation Layer (`:app`, `:feature:*`)
 - **Route-Screen 패턴** 적용: `Route`(Stateful)가 ViewModel과 상태를 연결하고, `Screen`(Stateless)은 순수 UI만 담당
+- **화면 분리 및 관심사 격리**: `MainScreen`(API 자동 로드)과 `LocalSearchScreen`(로컬 DB 필터링)으로 역할 분리
 - Jetpack Compose + Navigation으로 화면 전환 관리
 - UiState는 Route → Screen → 하위 컴포넌트까지 명시적으로 전달
 
@@ -121,8 +122,9 @@ ImageSearch/
 - **`rememberSaveable`**: Configuration Change(화면 회전) 시 UI 상태 보존
 - **Route-Screen 분리**: ViewModel 의존성을 Route에 격리하여 Screen의 재사용성과 테스트 용이성 확보
 
-### 오프라인 캐싱 전략
-- `RemoteMediator`가 API 응답을 Room에 캐싱하고, `PagingSource`는 항상 Room에서만 데이터를 읽음
+### 오프라인 캐싱 전략 및 로컬 검색 (Local Filtering)
+- **SSOT (Single Source of Truth)**: `RemoteMediator`가 API 응답을 Room에 캐싱하고, 모든 페이징은 Room에서만 이루어짐
+- **로컬 검색 최적화**: 검색 페이지 진입 시 네이버 API를 중복 호출하지 않고, 이미 로드된 '만화' 데이터의 `title`을 대상으로 Room DB의 `LIKE %keyword%` 쿼리를 사용해 로컬 필터링 검색 수행
 - 네트워크 불가 시 Room 캐시로 이전 검색 결과를 즉시 표시
 - `fallbackToDestructiveMigration()`으로 개발 단계 스키마 변경 유연하게 대응
 

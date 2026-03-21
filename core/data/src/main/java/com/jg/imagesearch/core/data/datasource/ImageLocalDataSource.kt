@@ -6,6 +6,7 @@ import com.jg.imagesearch.core.database.model.SearchRemoteKeysEntity
 
 interface ImageLocalDataSource {
     fun pagingSource(query: String): PagingSource<Int, SearchImageEntity>
+    fun searchByTitleLocal(keyword: String): PagingSource<Int, SearchImageEntity>
     suspend fun insertAll(images: List<SearchImageEntity>)
     suspend fun clearImages(query: String)
     suspend fun insertRemoteKeys(keys: List<SearchRemoteKeysEntity>)

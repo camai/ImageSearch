@@ -15,6 +15,9 @@ interface SearchImageDao {
     @Query("SELECT * FROM search_images WHERE searchQuery = :query ORDER BY id ASC")
     fun pagingSource(query: String): PagingSource<Int, SearchImageEntity>
 
+    @Query("SELECT * FROM search_images WHERE title LIKE '%' || :keyword || '%' ORDER BY id ASC")
+    fun searchByTitleLocal(keyword: String): PagingSource<Int, SearchImageEntity>
+
     @Query("DELETE FROM search_images WHERE searchQuery = :query")
     suspend fun clearImages(query: String)
 }

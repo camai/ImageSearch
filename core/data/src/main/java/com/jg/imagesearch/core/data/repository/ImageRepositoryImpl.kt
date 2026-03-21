@@ -42,6 +42,20 @@ class ImageRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun searchLocalImages(keyword: String): Flow<PagingData<ImageItem>> {
+        val pagingSourceFactory = { localDataSource.searchByTitleLocal(keyword) }
+
+        return Pager(
+            config = PagingConfig(
+                pageSize = 50,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = pagingSourceFactory
+        ).flow.map { pagingData ->
+            pagingData.map { it.toDomainModel() }
+        }
+    }
+
     override suspend fun getRandomImages(query: String, display: Int): DataResult<List<ImageItem>, String> {
         return runCatching {
             val randomStart = Random.nextInt(1, 100)
