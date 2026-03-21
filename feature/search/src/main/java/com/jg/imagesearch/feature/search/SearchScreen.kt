@@ -39,8 +39,8 @@ import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.UiEffect
 
 @Composable
-fun LocalSearchRoute(
-    viewModel: LocalSearchViewModel = hiltViewModel(),
+fun SearchRoute(
+    viewModel: SearchViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit,
     onBack: () -> Unit
 ) {
@@ -169,7 +169,7 @@ private fun LocalSearchScreen(
                         contentType = searchResults.itemContentType { "image" }
                     ) { index ->
                         searchResults[index]?.let { item ->
-                            LocalSearchImageCard(
+                            SearchImageCard(
                                 item = item,
                                 onClick = {
                                     focusManager.clearFocus()
@@ -186,7 +186,7 @@ private fun LocalSearchScreen(
 }
 
 @Composable
-private fun LocalSearchImageCard(
+private fun SearchImageCard(
     item: ImageItem,
     onClick: () -> Unit,
     onBookmarkToggle: () -> Unit

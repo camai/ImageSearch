@@ -19,7 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.jg.imagesearch.feature.bookmark.BookmarkRoute
 import com.jg.imagesearch.feature.search.MainRoute
-import com.jg.imagesearch.feature.search.LocalSearchRoute
+import com.jg.imagesearch.feature.search.SearchRoute
 import com.jg.imagesearch.feature.viewer.ViewerRoute
 import com.jg.imagesearch.core.model.ImageItem
 import com.google.gson.Gson
@@ -99,7 +99,7 @@ fun MainAppScreen() {
                 )
             }
             composable(Screen.LocalSearch.route) {
-                LocalSearchRoute(
+                SearchRoute(
                     onNavigateToViewer = { item ->
                         navController.navigate(Screen.Viewer.createRoute(item))
                     },

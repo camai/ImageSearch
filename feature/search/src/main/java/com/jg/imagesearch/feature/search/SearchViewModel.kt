@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-class LocalSearchViewModel @Inject constructor(
+class SearchViewModel @Inject constructor(
     private val searchLocalImagesUseCase: SearchLocalImagesUseCase,
     private val getBookmarksUseCase: GetBookmarksUseCase,
     private val toggleBookmarkUseCase: ToggleBookmarkUseCase
