@@ -25,32 +25,41 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.jg.imagesearch.core.model.AppColors
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.UiEffect
 
-// ──────────────────────────────────────────────
-// Route (Stateful) — ViewModel 의존, 상태 수집
-// ──────────────────────────────────────────────
+
 @Composable
 fun BookmarkRoute(
     viewModel: BookmarkViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
     val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
 
     BookmarkScreen(
         bookmarks = bookmarks,
+        snackbarHostState = snackbarHostState,
         onRemoveBookmarks = viewModel::removeBookmarks,
         onNavigateToViewer = onNavigateToViewer
     )
 }
 
-// ──────────────────────────────────────────────
-// Screen (Stateless) — 순수 UI, Preview 가능
-// ──────────────────────────────────────────────
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookmarkScreen(
+private fun BookmarkScreen(
     bookmarks: List<ImageItem>,
+    snackbarHostState: SnackbarHostState,
     onRemoveBookmarks: (List<ImageItem>) -> Unit,
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
@@ -61,6 +70,7 @@ fun BookmarkScreen(
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -138,12 +148,10 @@ fun BookmarkScreen(
     }
 }
 
-// ──────────────────────────────────────────────
-// Sub-Component — UiState 직접 전달
-// ──────────────────────────────────────────────
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BookmarkCard(
+private fun BookmarkCard(
     item: ImageItem,
     isSelected: Boolean,
     isSelectionMode: Boolean,
@@ -176,7 +184,7 @@ fun BookmarkCard(
                     modifier = Modifier
                         .fillMaxSize()
                         .matchParentSize()
-                        .background(if (isSelected) Color.Black.copy(alpha = 0.5f) else Color.Transparent)
+                        .background(if (isSelected) AppColors.SelectionOverlay else Color.Transparent)
                 )
                 if (isSelected) {
                     Icon(

@@ -1,5 +1,6 @@
 plugins {
     id("imagesearch.android.library")
+    id("imagesearch.android.compose")
 }
 
 android {

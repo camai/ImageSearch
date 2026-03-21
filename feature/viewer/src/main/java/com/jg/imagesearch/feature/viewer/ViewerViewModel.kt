@@ -7,10 +7,14 @@ import com.jg.imagesearch.core.domain.usecase.GetRandomImagesUseCase
 import com.jg.imagesearch.core.domain.usecase.ToggleBookmarkUseCase
 import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,6 +30,9 @@ class ViewerViewModel @Inject constructor(
     private val _rawImages = MutableStateFlow<List<ImageItem>>(emptyList())
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _uiEffect = MutableSharedFlow<UiEffect>()
+    val uiEffect: SharedFlow<UiEffect> = _uiEffect.asSharedFlow()
 
     val images: StateFlow<List<ImageItem>> = _rawImages
         .combine(getBookmarksUseCase()) { images, bookmarks ->
@@ -43,14 +50,14 @@ class ViewerViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _rawImages.value = listOf(selectedItem)
-            
+
             when (val result = getRandomImagesUseCase("만화", 30)) {
                 is DomainResult.Success -> {
                     val filtered = result.data.filter { it.link != selectedItem.link }.take(30)
                     _rawImages.value = listOf(selectedItem) + filtered
                 }
                 is DomainResult.Fail -> {
-                    // ignore failure and just show selectedItem
+                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error))
                 }
             }
             _isLoading.value = false
@@ -59,7 +66,12 @@ class ViewerViewModel @Inject constructor(
 
     fun toggleBookmark(item: ImageItem) {
         viewModelScope.launch {
-            toggleBookmarkUseCase(item)
+            when (val result = toggleBookmarkUseCase(item)) {
+                is DomainResult.Success -> { /* Bookmark state is auto-synced via Flow */ }
+                is DomainResult.Fail -> {
+                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error))
+                }
+            }
         }
     }
 }

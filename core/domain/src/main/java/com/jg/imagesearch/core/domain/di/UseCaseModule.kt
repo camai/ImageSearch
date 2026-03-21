@@ -1,4 +1,4 @@
-package com.jg.imagesearch.core.data.di
+package com.jg.imagesearch.core.domain.di
 
 import com.jg.imagesearch.core.domain.usecase.*
 import com.jg.imagesearch.core.domain.usecase.impl.*

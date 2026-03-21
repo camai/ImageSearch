@@ -1,17 +1,29 @@
 package com.jg.imagesearch.feature.search
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
+import com.jg.imagesearch.core.model.AppColors
 
-fun Modifier.shimmerEffect(): Modifier = composed {
+@Composable
+fun ShimmerBox(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit = {}
+) {
     var size by remember { mutableStateOf(IntSize.Zero) }
     val transition = rememberInfiniteTransition(label = "shimmer")
     val startOffsetX by transition.animateFloat(
@@ -23,17 +35,21 @@ fun Modifier.shimmerEffect(): Modifier = composed {
         label = "shimmer_offset"
     )
 
-    background(
-        brush = Brush.linearGradient(
-            colors = listOf(
-                Color(0xFFE0E0E0),
-                Color(0xFFF5F5F5),
-                Color(0xFFE0E0E0)
-            ),
-            start = Offset(startOffsetX, 0f),
-            end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
-        )
-    ).onGloballyPositioned {
-        size = it.size
+    Box(
+        modifier = modifier
+            .onGloballyPositioned { size = it.size }
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        AppColors.ShimmerBase,
+                        AppColors.ShimmerHighlight,
+                        AppColors.ShimmerBase
+                    ),
+                    start = Offset(startOffsetX, 0f),
+                    end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
+                )
+            )
+    ) {
+        content()
     }
 }

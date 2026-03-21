@@ -33,10 +33,9 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.UiEffect
 
-// ──────────────────────────────────────────────
-// Route (Stateful) — ViewModel 의존, 상태 수집
-// ──────────────────────────────────────────────
+
 @Composable
 fun SearchRoute(
     viewModel: SearchViewModel = hiltViewModel(),
@@ -44,31 +43,38 @@ fun SearchRoute(
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
 
     SearchScreen(
         query = query,
         searchResults = searchResults,
+        snackbarHostState = snackbarHostState,
         onQueryChanged = viewModel::onQueryChanged,
         onBookmarkToggle = viewModel::toggleBookmark,
         onNavigateToViewer = onNavigateToViewer
     )
 }
 
-// ──────────────────────────────────────────────
-// Screen (Stateless) — 순수 UI, Preview 가능
-// ──────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(
+private fun SearchScreen(
     query: String,
     searchResults: LazyPagingItems<ImageItem>,
+    snackbarHostState: SnackbarHostState,
     onQueryChanged: (String) -> Unit,
     onBookmarkToggle: (ImageItem) -> Unit,
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
     var textValue by remember { mutableStateOf(TextFieldValue(query)) }
     val focusManager = LocalFocusManager.current
-    val snackbarHostState = remember { SnackbarHostState() }
     val configuration = LocalConfiguration.current
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
 
@@ -151,14 +157,12 @@ fun SearchScreen(
                     ) {
                         if (searchResults.loadState.refresh is LoadState.Loading && searchResults.itemCount == 0) {
                             items(10) {
-                                Card(
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                        .fillMaxWidth()
-                                        .aspectRatio(1f)
-                                        .shimmerEffect(),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                ) {}
+                                    ShimmerBox(
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .fillMaxWidth()
+                                            .aspectRatio(1f)
+                                    )
                             }
                         } else {
                             items(
@@ -180,14 +184,12 @@ fun SearchScreen(
 
                             if (searchResults.loadState.append is LoadState.Loading) {
                                 items(columns) {
-                                    Card(
+                                    ShimmerBox(
                                         modifier = Modifier
                                             .padding(4.dp)
                                             .fillMaxWidth()
                                             .aspectRatio(1f)
-                                            .shimmerEffect(),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                    ) {}
+                                    )
                                 }
                             }
                         }

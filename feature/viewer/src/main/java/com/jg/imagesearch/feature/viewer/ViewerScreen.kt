@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.UiEffect
 
 // ──────────────────────────────────────────────
 // Route (Stateful) — ViewModel 의존, 상태 수집
@@ -39,27 +40,37 @@ fun ViewerRoute(
 
     val images by viewModel.images.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
 
     ViewerScreen(
         images = images,
         isLoading = isLoading,
+        snackbarHostState = snackbarHostState,
         onBack = onBack,
         onBookmarkToggle = viewModel::toggleBookmark
     )
 }
 
-// ──────────────────────────────────────────────
-// Screen (Stateless) — 순수 UI, Preview 가능
-// ──────────────────────────────────────────────
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ViewerScreen(
+private fun ViewerScreen(
     images: List<ImageItem>,
     isLoading: Boolean,
+    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onBookmarkToggle: (ImageItem) -> Unit
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(id = R.string.title_image_viewer)) },
@@ -97,11 +108,9 @@ fun ViewerScreen(
     }
 }
 
-// ──────────────────────────────────────────────
-// Sub-Components — UiState(ImageItem) 직접 전달
-// ──────────────────────────────────────────────
+
 @Composable
-fun ZoomableImageCard(
+private fun ZoomableImageCard(
     item: ImageItem,
     onBookmarkToggle: () -> Unit
 ) {
@@ -168,7 +177,7 @@ fun ZoomableImageCard(
 }
 
 @Composable
-fun ViewerImageCard(
+private fun ViewerImageCard(
     item: ImageItem,
     onBookmarkToggle: () -> Unit
 ) {
