@@ -22,7 +22,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "imagesearch_db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
