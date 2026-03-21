@@ -1,11 +1,11 @@
-package com.jg.imagesearch.core.data.local.dao
+package com.jg.imagesearch.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.jg.imagesearch.core.data.local.entity.BookmarkEntity
+import com.jg.imagesearch.core.database.model.BookmarkEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

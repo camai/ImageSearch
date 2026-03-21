@@ -23,8 +23,10 @@ dependencyResolutionManagement {
 rootProject.name = "ImageSearch"
 include(":app")
 include(":core:data")
+include(":core:database")
 include(":core:domain")
 include(":core:model")
+include(":core:network")
 include(":feature:bookmark")
 include(":feature:search")
 include(":feature:viewer")

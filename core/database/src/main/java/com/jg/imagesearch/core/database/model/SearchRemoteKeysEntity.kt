@@ -1,4 +1,4 @@
-package com.jg.imagesearch.core.data.local.entity
+package com.jg.imagesearch.core.database.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

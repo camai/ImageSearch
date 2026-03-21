@@ -4,17 +4,17 @@ plugins {
 }
 
 android {
-    namespace = "com.jg.imagesearch.core.data"
+    namespace = "com.jg.imagesearch.core.database"
 }
 
 dependencies {
     implementation(project(":core:model"))
-    implementation(project(":core:domain"))
-    implementation(project(":core:network"))
-    implementation(project(":core:database"))
 
-    // Room (for withTransaction)
+    // Room
+    implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.room.paging)
+    ksp(libs.room.compiler)
 
     // Paging
     implementation(libs.paging.runtime)

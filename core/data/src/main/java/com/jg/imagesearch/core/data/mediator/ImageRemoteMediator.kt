@@ -4,21 +4,17 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import androidx.room.withTransaction
-import com.jg.imagesearch.core.data.api.NaverImageApi
-import com.jg.imagesearch.core.data.local.AppDatabase
-import com.jg.imagesearch.core.data.local.entity.SearchImageEntity
-import com.jg.imagesearch.core.data.local.entity.SearchRemoteKeysEntity
+import com.jg.imagesearch.core.data.datasource.ImageLocalDataSource
+import com.jg.imagesearch.core.data.datasource.ImageRemoteDataSource
+import com.jg.imagesearch.core.database.model.SearchImageEntity
+import com.jg.imagesearch.core.database.model.SearchRemoteKeysEntity
 
 @OptIn(ExperimentalPagingApi::class)
 class ImageRemoteMediator(
     private val query: String,
-    private val api: NaverImageApi,
-    private val db: AppDatabase
+    private val remoteDataSource: ImageRemoteDataSource,
+    private val localDataSource: ImageLocalDataSource
 ) : RemoteMediator<Int, SearchImageEntity>() {
-
-    private val searchImageDao = db.searchImageDao()
-    private val remoteKeysDao = db.searchRemoteKeysDao()
 
     override suspend fun load(
         loadType: LoadType,
@@ -44,7 +40,7 @@ class ImageRemoteMediator(
                 }
             }
 
-            val response = api.searchImages(
+            val response = remoteDataSource.searchImages(
                 query = query,
                 display = state.config.pageSize,
                 start = start
@@ -52,14 +48,14 @@ class ImageRemoteMediator(
             val items = response.items
             val endOfPaginationReached = items.isEmpty()
 
-            db.withTransaction {
+            localDataSource.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    remoteKeysDao.clearRemoteKeys(query)
-                    searchImageDao.clearImages(query)
+                    localDataSource.clearRemoteKeys(query)
+                    localDataSource.clearImages(query)
                 }
                 val prevKey = if (start == 1) null else start - state.config.pageSize
                 val nextKey = if (endOfPaginationReached) null else start + state.config.pageSize
-                
+
                 val keys = items.map {
                     SearchRemoteKeysEntity(
                         link = it.link,
@@ -68,8 +64,8 @@ class ImageRemoteMediator(
                         searchQuery = query
                     )
                 }
-                remoteKeysDao.insertAll(keys)
-                
+                localDataSource.insertRemoteKeys(keys)
+
                 val imageEntities = items.map {
                     SearchImageEntity(
                         link = it.link,
@@ -80,7 +76,7 @@ class ImageRemoteMediator(
                         searchQuery = query
                     )
                 }
-                searchImageDao.insertAll(imageEntities)
+                localDataSource.insertAll(imageEntities)
             }
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (e: Exception) {
@@ -90,22 +86,18 @@ class ImageRemoteMediator(
 
     private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, SearchImageEntity>): SearchRemoteKeysEntity? {
         return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
-            ?.let { repo ->
-                remoteKeysDao.remoteKeysByLink(repo.link)
-            }
+            ?.let { repo -> localDataSource.remoteKeysByLink(repo.link) }
     }
 
     private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, SearchImageEntity>): SearchRemoteKeysEntity? {
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
-            ?.let { repo ->
-                remoteKeysDao.remoteKeysByLink(repo.link)
-            }
+            ?.let { repo -> localDataSource.remoteKeysByLink(repo.link) }
     }
 
     private suspend fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, SearchImageEntity>): SearchRemoteKeysEntity? {
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.link?.let { link ->
-                remoteKeysDao.remoteKeysByLink(link)
+                localDataSource.remoteKeysByLink(link)
             }
         }
     }

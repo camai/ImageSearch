@@ -1,6 +1,6 @@
-package com.jg.imagesearch.core.data.api
+package com.jg.imagesearch.core.network.api
 
-import com.jg.imagesearch.core.data.api.dto.ImageSearchResponse
+import com.jg.imagesearch.core.network.model.ImageSearchResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

@@ -1,7 +1,7 @@
-package com.jg.imagesearch.core.data.di
+package com.jg.imagesearch.core.network.di
 
-import com.jg.imagesearch.core.data.BuildConfig
-import com.jg.imagesearch.core.data.api.NaverImageApi
+import com.jg.imagesearch.core.network.BuildConfig
+import com.jg.imagesearch.core.network.api.NaverImageApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

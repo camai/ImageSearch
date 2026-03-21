@@ -5,8 +5,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.jg.imagesearch.core.data.api.NaverImageApi
-import com.jg.imagesearch.core.data.local.AppDatabase
+import com.jg.imagesearch.core.data.datasource.ImageLocalDataSource
+import com.jg.imagesearch.core.data.datasource.ImageRemoteDataSource
 import com.jg.imagesearch.core.data.mediator.ImageRemoteMediator
 import com.jg.imagesearch.core.domain.repository.ImageRepository
 import com.jg.imagesearch.core.model.DataResult
@@ -17,13 +17,13 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 class ImageRepositoryImpl @Inject constructor(
-    private val api: NaverImageApi,
-    private val db: AppDatabase
+    private val remoteDataSource: ImageRemoteDataSource,
+    private val localDataSource: ImageLocalDataSource
 ) : ImageRepository {
 
     @OptIn(ExperimentalPagingApi::class)
     override fun searchImages(query: String): Flow<PagingData<ImageItem>> {
-        val pagingSourceFactory = { db.searchImageDao().pagingSource(query) }
+        val pagingSourceFactory = { localDataSource.pagingSource(query) }
 
         return Pager(
             config = PagingConfig(
@@ -33,8 +33,8 @@ class ImageRepositoryImpl @Inject constructor(
             ),
             remoteMediator = ImageRemoteMediator(
                 query = query,
-                api = api,
-                db = db
+                remoteDataSource = remoteDataSource,
+                localDataSource = localDataSource
             ),
             pagingSourceFactory = pagingSourceFactory
         ).flow.map { pagingData ->
@@ -45,7 +45,7 @@ class ImageRepositoryImpl @Inject constructor(
     override suspend fun getRandomImages(query: String, display: Int): DataResult<List<ImageItem>, String> {
         return runCatching {
             val randomStart = Random.nextInt(1, 100)
-            val response = api.searchImages(query = query, display = display, start = randomStart)
+            val response = remoteDataSource.searchImages(query = query, display = display, start = randomStart)
             DataResult.Success(response.items.map { it.toDomainModel() }.shuffled())
         }.getOrElse { e ->
             DataResult.Fail(e.message ?: "Unknown API Error")

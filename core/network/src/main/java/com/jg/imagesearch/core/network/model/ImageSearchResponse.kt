@@ -1,7 +1,6 @@
-package com.jg.imagesearch.core.data.api.dto
+package com.jg.imagesearch.core.network.model
 
 import com.jg.imagesearch.core.model.ImageItem
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable

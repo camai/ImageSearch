@@ -1,9 +1,11 @@
-package com.jg.imagesearch.core.data.di
+package com.jg.imagesearch.core.database.di
 
 import android.content.Context
 import androidx.room.Room
-import com.jg.imagesearch.core.data.local.AppDatabase
-import com.jg.imagesearch.core.data.local.dao.BookmarkDao
+import com.jg.imagesearch.core.database.AppDatabase
+import com.jg.imagesearch.core.database.dao.BookmarkDao
+import com.jg.imagesearch.core.database.dao.SearchImageDao
+import com.jg.imagesearch.core.database.dao.SearchRemoteKeysDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +16,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-    
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -29,5 +31,17 @@ object DatabaseModule {
     @Singleton
     fun provideBookmarkDao(appDatabase: AppDatabase): BookmarkDao {
         return appDatabase.bookmarkDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchImageDao(appDatabase: AppDatabase): SearchImageDao {
+        return appDatabase.searchImageDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchRemoteKeysDao(appDatabase: AppDatabase): SearchRemoteKeysDao {
+        return appDatabase.searchRemoteKeysDao()
     }
 }
