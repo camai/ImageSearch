@@ -23,7 +23,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.UiEffect
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ViewerRoute(
@@ -38,11 +40,21 @@ fun ViewerRoute(
     val images by viewModel.images.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbar -> {
+                    val msg = when (effect.message) {
+                        SnackbarMessage.BOOKMARK_ADDED -> context.getString(R.string.msg_bookmark_added)
+                        SnackbarMessage.BOOKMARK_REMOVED -> context.getString(R.string.msg_bookmark_removed)
+                        SnackbarMessage.ERROR_RELATED_IMAGES -> context.getString(R.string.msg_error_related_images, *effect.args.toTypedArray())
+                        SnackbarMessage.ERROR_DEFAULT -> context.getString(R.string.msg_error_default, *effect.args.toTypedArray())
+                        else -> context.getString(R.string.msg_error_unknown)
+                    }
+                    snackbarHostState.showSnackbar(msg)
+                }
             }
         }
     }

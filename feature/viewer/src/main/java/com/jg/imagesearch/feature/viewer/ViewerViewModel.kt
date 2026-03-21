@@ -7,6 +7,7 @@ import com.jg.imagesearch.core.domain.usecase.GetRandomImagesUseCase
 import com.jg.imagesearch.core.domain.usecase.ToggleBookmarkUseCase
 import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.SnackbarType
 import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,9 +53,9 @@ class ViewerViewModel @Inject constructor(
             _isLoading.value = true
             _rawImages.value = listOf(selectedItem)
 
-            // 선택한 이미지의 제목으로 관련 이미지 검색 (하드코딩 제거)
+
             val relatedQuery = selectedItem.title
-                .replace(Regex("<[^>]*>"), "")  // HTML 태그 제거
+                .replace(Regex("<[^>]*>"), "")
                 .trim()
                 .take(20)
                 .ifBlank { "이미지" }
@@ -66,7 +67,7 @@ class ViewerViewModel @Inject constructor(
                 }
                 is DomainResult.Fail -> {
                     _uiEffect.emit(
-                        UiEffect.ShowSnackbar("관련 이미지를 불러오지 못했습니다: ${result.error}", SnackbarType.ERROR)
+                        UiEffect.ShowSnackbar(SnackbarMessage.ERROR_RELATED_IMAGES, listOf(result.error), SnackbarType.ERROR)
                     )
                 }
             }
@@ -78,11 +79,11 @@ class ViewerViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = toggleBookmarkUseCase(item)) {
                 is DomainResult.Success -> {
-                    val message = if (item.isBookmarked) "북마크를 해제했습니다" else "북마크에 추가했습니다"
-                    _uiEffect.emit(UiEffect.ShowSnackbar(message, SnackbarType.SUCCESS))
+                    val messageEnum = if (item.isBookmarked) SnackbarMessage.BOOKMARK_REMOVED else SnackbarMessage.BOOKMARK_ADDED
+                    _uiEffect.emit(UiEffect.ShowSnackbar(messageEnum, type = SnackbarType.SUCCESS))
                 }
                 is DomainResult.Fail -> {
-                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error, SnackbarType.ERROR))
+                    _uiEffect.emit(UiEffect.ShowSnackbar(SnackbarMessage.ERROR_DEFAULT, listOf(result.error), SnackbarType.ERROR))
                 }
             }
         }

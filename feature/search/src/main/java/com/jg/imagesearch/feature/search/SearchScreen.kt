@@ -34,7 +34,9 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.UiEffect
+import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
@@ -45,11 +47,20 @@ fun SearchRoute(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbar -> {
+                    val msg = when (effect.message) {
+                        SnackbarMessage.BOOKMARK_ADDED -> context.getString(R.string.msg_bookmark_added)
+                        SnackbarMessage.BOOKMARK_REMOVED -> context.getString(R.string.msg_bookmark_removed)
+                        SnackbarMessage.ERROR_DEFAULT -> context.getString(R.string.msg_error_default, *effect.args.toTypedArray())
+                        else -> context.getString(R.string.msg_error_unknown)
+                    }
+                    snackbarHostState.showSnackbar(msg)
+                }
             }
         }
     }

@@ -6,6 +6,7 @@ import com.jg.imagesearch.core.domain.usecase.GetBookmarksUseCase
 import com.jg.imagesearch.core.domain.usecase.RemoveBookmarksUseCase
 import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.SnackbarType
 import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,11 +41,11 @@ class BookmarkViewModel @Inject constructor(
                 is DomainResult.Success -> {
                     val count = items.size
                     _uiEffect.emit(
-                        UiEffect.ShowSnackbar("${count}개의 북마크가 삭제되었습니다", SnackbarType.SUCCESS)
+                        UiEffect.ShowSnackbar(SnackbarMessage.BOOKMARKS_DELETED, listOf(count.toString()), SnackbarType.SUCCESS)
                     )
                 }
                 is DomainResult.Fail -> {
-                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error, SnackbarType.ERROR))
+                    _uiEffect.emit(UiEffect.ShowSnackbar(SnackbarMessage.ERROR_DEFAULT, listOf(result.error), SnackbarType.ERROR))
                 }
             }
         }

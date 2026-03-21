@@ -48,7 +48,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.AppColors
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.UiEffect
+import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
@@ -58,11 +60,19 @@ fun BookmarkRoute(
 ) {
     val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbar -> {
+                    val msg = when (effect.message) {
+                        SnackbarMessage.BOOKMARKS_DELETED -> context.getString(R.string.msg_bookmarks_deleted, *effect.args.toTypedArray())
+                        SnackbarMessage.ERROR_DEFAULT -> context.getString(R.string.msg_error_default, *effect.args.toTypedArray())
+                        else -> context.getString(R.string.msg_error_unknown)
+                    }
+                    snackbarHostState.showSnackbar(msg)
+                }
             }
         }
     }
