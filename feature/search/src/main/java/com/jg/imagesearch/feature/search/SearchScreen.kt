@@ -30,6 +30,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import androidx.paging.compose.itemContentType
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
 import kotlinx.coroutines.delay
@@ -147,7 +149,11 @@ fun SearchScreen(
                                 ) {}
                             }
                         } else {
-                            items(searchResults.itemCount) { index ->
+                            items(
+                                count = searchResults.itemCount,
+                                key = searchResults.itemKey { it.link },
+                                contentType = searchResults.itemContentType { "image" }
+                            ) { index ->
                                 searchResults[index]?.let { item ->
                                     SearchImageCard(
                                     item = item,
