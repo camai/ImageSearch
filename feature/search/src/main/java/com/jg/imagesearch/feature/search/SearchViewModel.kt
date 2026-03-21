@@ -32,6 +32,7 @@ class SearchViewModel @Inject constructor(
         .filter { it.isNotBlank() }
         .flatMapLatest { q ->
             searchImagesUseCase(q)
+                .cachedIn(viewModelScope)
                 .combine(getBookmarksUseCase()) { pagingData, bookmarks ->
                     val bookmarkLinks = bookmarks.map { it.link }.toSet()
                     pagingData.map { item ->

@@ -1,5 +1,7 @@
 package com.jg.imagesearch.ui
 
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -43,7 +45,6 @@ fun MainAppScreen() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Viewer Screen will not show the BottomNav because it takes over the screen
     val showBottomBar = currentRoute?.startsWith("viewer") != true
 
     Scaffold(
@@ -78,7 +79,10 @@ fun MainAppScreen() {
         NavHost(
             navController = navController,
             startDestination = Screen.Search.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
         ) {
             composable(Screen.Search.route) {
                 SearchScreen(

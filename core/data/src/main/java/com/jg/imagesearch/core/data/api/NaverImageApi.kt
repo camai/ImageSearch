@@ -9,8 +9,6 @@ interface NaverImageApi {
     suspend fun searchImages(
         @Query("query") query: String,
         @Query("display") display: Int = 50,
-        @Query("start") start: Int = 1,
-        @Query("sort") sort: String = "sim",
-        @Query("filter") filter: String = "all"
+        @Query("start") start: Int = 1
     ): ImageSearchResponse
 }

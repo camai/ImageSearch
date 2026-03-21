@@ -19,6 +19,7 @@ class ImageRepositoryImpl @Inject constructor(
         return Pager(
             config = PagingConfig(
                 pageSize = 50,
+                initialLoadSize = 50,
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { ImagePagingSource(api, query) }
