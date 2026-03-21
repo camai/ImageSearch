@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -73,7 +74,10 @@ private fun SearchScreen(
     onBookmarkToggle: (ImageItem) -> Unit,
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
-    var textValue by remember { mutableStateOf(TextFieldValue(query)) }
+    // rememberSaveable: 화면 회전(Configuration Change) 이후에도 입력값 유지
+    var textValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(query))
+    }
     val focusManager = LocalFocusManager.current
     val configuration = LocalConfiguration.current
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
@@ -144,7 +148,10 @@ private fun SearchScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                val isRefreshing = searchResults.loadState.refresh is LoadState.Loading
+                // derivedStateOf: loadState가 변경될 때만 재계산 → 불필요한 리컴포지션 차단
+                val isRefreshing by remember {
+                    derivedStateOf { searchResults.loadState.refresh is LoadState.Loading }
+                }
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = { searchResults.refresh() },
@@ -200,11 +207,8 @@ private fun SearchScreen(
     }
 }
 
-// ──────────────────────────────────────────────
-// Sub-Component — UiState(ImageItem) 직접 전달
-// ──────────────────────────────────────────────
 @Composable
-fun SearchImageCard(
+private fun SearchImageCard(
     item: ImageItem,
     onClick: () -> Unit,
     onBookmarkToggle: () -> Unit

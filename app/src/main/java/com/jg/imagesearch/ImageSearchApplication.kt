@@ -27,3 +27,4 @@ class ImageSearchApplication : Application(), ImageLoaderFactory {
             .build()
     }
 }
+

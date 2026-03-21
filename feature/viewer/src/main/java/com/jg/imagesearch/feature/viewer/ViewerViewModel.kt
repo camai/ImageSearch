@@ -7,6 +7,7 @@ import com.jg.imagesearch.core.domain.usecase.GetRandomImagesUseCase
 import com.jg.imagesearch.core.domain.usecase.ToggleBookmarkUseCase
 import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarType
 import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -51,13 +52,22 @@ class ViewerViewModel @Inject constructor(
             _isLoading.value = true
             _rawImages.value = listOf(selectedItem)
 
-            when (val result = getRandomImagesUseCase("만화", 30)) {
+            // 선택한 이미지의 제목으로 관련 이미지 검색 (하드코딩 제거)
+            val relatedQuery = selectedItem.title
+                .replace(Regex("<[^>]*>"), "")  // HTML 태그 제거
+                .trim()
+                .take(20)
+                .ifBlank { "이미지" }
+
+            when (val result = getRandomImagesUseCase(relatedQuery, 30)) {
                 is DomainResult.Success -> {
                     val filtered = result.data.filter { it.link != selectedItem.link }.take(30)
                     _rawImages.value = listOf(selectedItem) + filtered
                 }
                 is DomainResult.Fail -> {
-                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error))
+                    _uiEffect.emit(
+                        UiEffect.ShowSnackbar("관련 이미지를 불러오지 못했습니다: ${result.error}", SnackbarType.ERROR)
+                    )
                 }
             }
             _isLoading.value = false
@@ -67,9 +77,12 @@ class ViewerViewModel @Inject constructor(
     fun toggleBookmark(item: ImageItem) {
         viewModelScope.launch {
             when (val result = toggleBookmarkUseCase(item)) {
-                is DomainResult.Success -> { /* Bookmark state is auto-synced via Flow */ }
+                is DomainResult.Success -> {
+                    val message = if (item.isBookmarked) "북마크를 해제했습니다" else "북마크에 추가했습니다"
+                    _uiEffect.emit(UiEffect.ShowSnackbar(message, SnackbarType.SUCCESS))
+                }
                 is DomainResult.Fail -> {
-                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error))
+                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error, SnackbarType.ERROR))
                 }
             }
         }

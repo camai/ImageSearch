@@ -6,6 +6,7 @@ import com.jg.imagesearch.core.domain.usecase.GetBookmarksUseCase
 import com.jg.imagesearch.core.domain.usecase.RemoveBookmarksUseCase
 import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.SnackbarType
 import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -36,9 +37,14 @@ class BookmarkViewModel @Inject constructor(
     fun removeBookmarks(items: List<ImageItem>) {
         viewModelScope.launch {
             when (val result = removeBookmarksUseCase(items)) {
-                is DomainResult.Success -> { /* UI updates via Flow automatically */ }
+                is DomainResult.Success -> {
+                    val count = items.size
+                    _uiEffect.emit(
+                        UiEffect.ShowSnackbar("${count}개의 북마크가 삭제되었습니다", SnackbarType.SUCCESS)
+                    )
+                }
                 is DomainResult.Fail -> {
-                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error))
+                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error, SnackbarType.ERROR))
                 }
             }
         }

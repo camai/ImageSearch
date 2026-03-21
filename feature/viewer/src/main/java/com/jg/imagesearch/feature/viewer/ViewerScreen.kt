@@ -25,9 +25,6 @@ import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
 import com.jg.imagesearch.core.model.UiEffect
 
-// ──────────────────────────────────────────────
-// Route (Stateful) — ViewModel 의존, 상태 수집
-// ──────────────────────────────────────────────
 @Composable
 fun ViewerRoute(
     selectedItem: ImageItem,
