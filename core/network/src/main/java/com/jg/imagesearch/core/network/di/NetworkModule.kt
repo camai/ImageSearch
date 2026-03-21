@@ -14,6 +14,9 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import okhttp3.Cache
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,7 +31,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -41,7 +44,11 @@ object NetworkModule {
             chain.proceed(request)
         }
 
+        val cacheSize = 10L * 1024 * 1024 // 10 MB
+        val cache = Cache(context.cacheDir.resolve("network_cache"), cacheSize)
+
         return OkHttpClient.Builder()
+            .cache(cache)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(headerInterceptor)
             .build()

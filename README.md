@@ -137,6 +137,7 @@ ImageSearch/
 |---|---|---|
 | **메모리 캐시** | `maxSizePercent = 0.20` | 앱 메모리의 20%를 이미지 캐시에 할당. OOM 방지와 캐시 히트 사이의 균형점 |
 | **디스크 캐시** | `maxSizePercent = 0.02` | 전체 디스크의 2%만 사용. `image_cache` 디렉토리에 저장 |
+| **네트워크 캐시** | 10MB 크기 할당 | `OkHttp` 클라이언트 단에 10MB의 네트워크 전용 캐시(`network_cache`) 구성 |
 | **캐시 헤더** | `respectCacheHeaders(false)` | 서버 캐시 정책을 무시하고 자체 캐시 정책 우선 적용 |
 | **Crossfade** | `crossfade(true)` | 이미지 로딩 완료 시 부드러운 페이드인 효과 |
 

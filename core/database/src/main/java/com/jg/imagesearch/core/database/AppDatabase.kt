@@ -18,4 +18,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun bookmarkDao(): BookmarkDao
     abstract fun searchImageDao(): SearchImageDao
     abstract fun searchRemoteKeysDao(): SearchRemoteKeysDao
+
+    companion object {
+        const val DATABASE_NAME = "imagesearch_db"
+    }
 }
