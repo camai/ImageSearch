@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="nav_main">메인</string>
+    <string name="nav_search">검색</string>
     <string name="search_hint">검색어를 입력하세요</string>
     <string name="search_desc">검색</string>
     <string name="clear_desc">지우기</string>

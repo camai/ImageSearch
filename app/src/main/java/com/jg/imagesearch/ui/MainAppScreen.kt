@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.jg.imagesearch.feature.bookmark.BookmarkRoute
 import com.jg.imagesearch.feature.search.SearchRoute
+import com.jg.imagesearch.feature.search.LocalSearchRoute
 import com.jg.imagesearch.feature.viewer.ViewerRoute
 import com.jg.imagesearch.core.model.ImageItem
 import com.google.gson.Gson
@@ -27,7 +28,8 @@ import java.net.URLEncoder
 import com.jg.imagesearch.R
 
 sealed class Screen(val route: String, val titleResId: Int) {
-    data object Search : Screen("search", R.string.nav_search)
+    data object Main : Screen("main", R.string.nav_main)
+    data object LocalSearch : Screen("local_search", R.string.nav_search)
     data object Bookmark : Screen("bookmark", R.string.nav_bookmark)
     data object Viewer : Screen("viewer/{imageItemJson}", R.string.nav_viewer) {
         fun createRoute(item: ImageItem): String {
@@ -38,7 +40,7 @@ sealed class Screen(val route: String, val titleResId: Int) {
     }
 }
 
-val BottomNavItems = listOf(Screen.Search, Screen.Bookmark)
+val BottomNavItems = listOf(Screen.Main, Screen.Bookmark)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +59,7 @@ fun MainAppScreen() {
                         NavigationBarItem(
                             icon = {
                                 Icon(
-                                    imageVector = if (screen == Screen.Search) Icons.Default.Search else Icons.Default.Favorite,
+                                    imageVector = if (screen == Screen.Main) Icons.Default.Search else Icons.Default.Favorite,
                                     contentDescription = stringResource(id = screen.titleResId)
                                 )
                             },
@@ -80,17 +82,28 @@ fun MainAppScreen() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Search.route,
+            startDestination = Screen.Main.route,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ) {
-            composable(Screen.Search.route) {
+            composable(Screen.Main.route) {
                 SearchRoute(
                     onNavigateToViewer = { item ->
                         navController.navigate(Screen.Viewer.createRoute(item))
+                    },
+                    onNavigateToLocalSearch = {
+                        navController.navigate(Screen.LocalSearch.route)
                     }
+                )
+            }
+            composable(Screen.LocalSearch.route) {
+                LocalSearchRoute(
+                    onNavigateToViewer = { item ->
+                        navController.navigate(Screen.Viewer.createRoute(item))
+                    },
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.Bookmark.route) {

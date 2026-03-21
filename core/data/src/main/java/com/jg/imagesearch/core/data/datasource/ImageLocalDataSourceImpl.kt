@@ -18,6 +18,10 @@ class ImageLocalDataSourceImpl @Inject constructor(
         return searchImageDao.pagingSource(query)
     }
 
+    override fun searchByTitleLocal(keyword: String): PagingSource<Int, SearchImageEntity> {
+        return searchImageDao.searchByTitleLocal(keyword)
+    }
+
     override suspend fun insertAll(images: List<SearchImageEntity>) {
         searchImageDao.insertAll(images)
     }
