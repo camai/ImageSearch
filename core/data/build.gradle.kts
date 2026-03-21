@@ -1,8 +1,6 @@
 plugins {
     id("imagesearch.android.library")
     id("imagesearch.android.hilt")
-    id("imagesearch.android.network")
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -12,19 +10,11 @@ android {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:domain"))
+    implementation(project(":core:network"))
+    implementation(project(":core:database"))
 
-    // Networking
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.kotlinx.serialization)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
-    implementation(libs.kotlinx.serialization.json)
-
-    // Room
-    implementation(libs.room.runtime)
+    // Room (for withTransaction)
     implementation(libs.room.ktx)
-    implementation(libs.room.paging)
-    ksp(libs.room.compiler)
 
     // Paging
     implementation(libs.paging.runtime)

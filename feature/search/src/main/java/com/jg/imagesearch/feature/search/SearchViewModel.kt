@@ -8,7 +8,9 @@ import androidx.paging.map
 import com.jg.imagesearch.core.domain.usecase.GetBookmarksUseCase
 import com.jg.imagesearch.core.domain.usecase.SearchImagesUseCase
 import com.jg.imagesearch.core.domain.usecase.ToggleBookmarkUseCase
+import com.jg.imagesearch.core.model.DomainResult
 import com.jg.imagesearch.core.model.ImageItem
+import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -26,6 +28,9 @@ class SearchViewModel @Inject constructor(
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
+
+    private val _uiEffect = MutableSharedFlow<UiEffect>()
+    val uiEffect: SharedFlow<UiEffect> = _uiEffect.asSharedFlow()
 
     val searchResults: Flow<PagingData<ImageItem>> = _query
         .debounce(1000L)
@@ -48,7 +53,12 @@ class SearchViewModel @Inject constructor(
 
     fun toggleBookmark(item: ImageItem) {
         viewModelScope.launch {
-            toggleBookmarkUseCase(item)
+            when (val result = toggleBookmarkUseCase(item)) {
+                is DomainResult.Success -> { /* Bookmark state is auto-synced via Flow */ }
+                is DomainResult.Fail -> {
+                    _uiEffect.emit(UiEffect.ShowSnackbar(result.error))
+                }
+            }
         }
     }
 }

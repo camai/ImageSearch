@@ -17,34 +17,83 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.jg.imagesearch.core.model.UiEffect
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
-fun SearchScreen(
+fun SearchRoute(
     viewModel: SearchViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
-    var isRefreshing by remember { mutableStateOf(false) }
-    var textValue by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(query)) }
-    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    SearchScreen(
+        query = query,
+        searchResults = searchResults,
+        snackbarHostState = snackbarHostState,
+        onQueryChanged = viewModel::onQueryChanged,
+        onBookmarkToggle = viewModel::toggleBookmark,
+        onNavigateToViewer = onNavigateToViewer
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchScreen(
+    query: String,
+    searchResults: LazyPagingItems<ImageItem>,
+    snackbarHostState: SnackbarHostState,
+    onQueryChanged: (String) -> Unit,
+    onBookmarkToggle: (ImageItem) -> Unit,
+    onNavigateToViewer: (ImageItem) -> Unit
+) {
+    var textValue by remember { mutableStateOf(TextFieldValue(query)) }
     val focusManager = LocalFocusManager.current
+    val configuration = LocalConfiguration.current
+    val columns = if (configuration.screenWidthDp >= 600) 4 else 2
+
+    LaunchedEffect(searchResults.loadState.refresh) {
+        val refreshState = searchResults.loadState.refresh
+        if (refreshState is LoadState.Error) {
+            val result = snackbarHostState.showSnackbar(
+                message = refreshState.error.localizedMessage ?: "Unknown Error",
+                actionLabel = "Retry",
+                duration = SnackbarDuration.Indefinite
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                searchResults.retry()
+            }
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -55,20 +104,20 @@ fun SearchScreen(
                     value = textValue,
                     onValueChange = { newValue ->
                         textValue = newValue
-                        viewModel.onQueryChanged(newValue.text)
+                        onQueryChanged(newValue.text)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("검색어를 입력하세요 (예: 만화)") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "검색") },
+                    placeholder = { Text(stringResource(id = R.string.search_hint)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(id = R.string.search_desc)) },
                     trailingIcon = {
                         if (textValue.text.isNotEmpty()) {
-                            IconButton(onClick = { 
-                                textValue = androidx.compose.ui.text.input.TextFieldValue("")
-                                viewModel.onQueryChanged("") 
+                            IconButton(onClick = {
+                                textValue = TextFieldValue("")
+                                onQueryChanged("")
                             }) {
-                                Icon(Icons.Default.Clear, contentDescription = "지우기")
+                                Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.clear_desc))
                             }
                         }
                     },
@@ -89,49 +138,58 @@ fun SearchScreen(
         ) {
             if (query.isBlank()) {
                 Text(
-                    text = "검색어를 입력하여 이미지를 찾아보세요.",
+                    text = stringResource(id = R.string.empty_search_prompt),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
+                val isRefreshing = searchResults.loadState.refresh is LoadState.Loading
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        searchResults.refresh()
-                        coroutineScope.launch {
-                            delay(500)
-                            isRefreshing = false
-                        }
-                    },
+                    onRefresh = { searchResults.refresh() },
                     modifier = Modifier.fillMaxSize()
                 ) {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = GridCells.Fixed(columns),
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(4.dp)
                     ) {
-                        items(searchResults.itemCount) { index ->
-                            searchResults[index]?.let { item ->
-                                SearchImageCard(
-                                    item = item,
-                                    onClick = {
-                                        focusManager.clearFocus()
-                                        onNavigateToViewer(item)
-                                    },
-                                    onBookmarkToggle = { viewModel.toggleBookmark(item) }
-                                )
+                        if (searchResults.loadState.refresh is LoadState.Loading && searchResults.itemCount == 0) {
+                            items(10) {
+                                    ShimmerBox(
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .fillMaxWidth()
+                                            .aspectRatio(1f)
+                                    )
                             }
-                        }
-                        
-                        searchResults.apply {
-                            when {
-                                loadState.refresh is LoadState.Loading -> {
-                                    // initial loading is handled by indicator
+                        } else {
+                            items(
+                                count = searchResults.itemCount,
+                                key = searchResults.itemKey { it.link },
+                                contentType = searchResults.itemContentType { "image" }
+                            ) { index ->
+                                searchResults[index]?.let { item ->
+                                    SearchImageCard(
+                                        item = item,
+                                        onClick = {
+                                            focusManager.clearFocus()
+                                            onNavigateToViewer(item)
+                                        },
+                                        onBookmarkToggle = { onBookmarkToggle(item) }
+                                    )
                                 }
-                                loadState.append is LoadState.Loading -> {
-                                    // infinite scroll loading indicator could be placed here 
+                            }
+
+                            if (searchResults.loadState.append is LoadState.Loading) {
+                                items(columns) {
+                                    ShimmerBox(
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .fillMaxWidth()
+                                            .aspectRatio(1f)
+                                    )
                                 }
                             }
                         }
@@ -142,6 +200,9 @@ fun SearchScreen(
     }
 }
 
+// ──────────────────────────────────────────────
+// Sub-Component — UiState(ImageItem) 직접 전달
+// ──────────────────────────────────────────────
 @Composable
 fun SearchImageCard(
     item: ImageItem,
@@ -166,11 +227,11 @@ fun SearchImageCard(
                     contentScale = ContentScale.Crop
                 )
                 IconButton(onClick = onBookmarkToggle) {
-                    val icon = if(item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
-                    val tint = if(item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    val icon = if (item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
+                    val tint = if (item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     Icon(
                         imageVector = icon,
-                        contentDescription = "Bookmark",
+                        contentDescription = stringResource(id = R.string.bookmark_desc),
                         tint = tint
                     )
                 }

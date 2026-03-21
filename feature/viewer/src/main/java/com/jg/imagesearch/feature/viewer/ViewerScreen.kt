@@ -1,11 +1,8 @@
 package com.jg.imagesearch.feature.viewer
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -16,19 +13,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
-import kotlinx.coroutines.launch
+import com.jg.imagesearch.core.model.UiEffect
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ──────────────────────────────────────────────
+// Route (Stateful) — ViewModel 의존, 상태 수집
+// ──────────────────────────────────────────────
 @Composable
-fun ViewerScreen(
+fun ViewerRoute(
     selectedItem: ImageItem,
     onBack: () -> Unit,
     viewModel: ViewerViewModel = hiltViewModel()
@@ -39,14 +40,43 @@ fun ViewerScreen(
 
     val images by viewModel.images.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    ViewerScreen(
+        images = images,
+        isLoading = isLoading,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onBookmarkToggle = viewModel::toggleBookmark
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ViewerScreen(
+    images: List<ImageItem>,
+    isLoading: Boolean,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onBookmarkToggle: (ImageItem) -> Unit
+) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("이미지 뷰어") },
+                title = { Text(stringResource(id = R.string.title_image_viewer)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.content_desc_back))
                     }
                 }
             )
@@ -58,16 +88,14 @@ fun ViewerScreen(
             ) {
                 itemsIndexed(images, key = { index, item -> "${item.link}_$index" }) { index, item ->
                     if (index == 0) {
-                        // First item is interactive
                         ZoomableImageCard(
                             item = item,
-                            onBookmarkToggle = { viewModel.toggleBookmark(item) }
+                            onBookmarkToggle = { onBookmarkToggle(item) }
                         )
                     } else {
-                        // Others are just normal cards
                         ViewerImageCard(
                             item = item,
-                            onBookmarkToggle = { viewModel.toggleBookmark(item) }
+                            onBookmarkToggle = { onBookmarkToggle(item) }
                         )
                     }
                 }
@@ -80,8 +108,9 @@ fun ViewerScreen(
     }
 }
 
+
 @Composable
-fun ZoomableImageCard(
+private fun ZoomableImageCard(
     item: ImageItem,
     onBookmarkToggle: () -> Unit
 ) {
@@ -128,18 +157,18 @@ fun ZoomableImageCard(
                         ),
                     contentScale = ContentScale.Fit
                 )
-                
+
                 IconButton(
                     onClick = onBookmarkToggle,
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
-                    val icon = if(item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
-                    val tint = if(item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    Icon(imageVector = icon, contentDescription = "Bookmark", tint = tint)
+                    val icon = if (item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
+                    val tint = if (item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    Icon(imageVector = icon, contentDescription = stringResource(id = R.string.content_desc_bookmark), tint = tint)
                 }
             }
             Text(
-                text = "핀치하여 확대/축소 지원",
+                text = stringResource(id = R.string.pinch_zoom_hint),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
             )
@@ -148,7 +177,7 @@ fun ZoomableImageCard(
 }
 
 @Composable
-fun ViewerImageCard(
+private fun ViewerImageCard(
     item: ImageItem,
     onBookmarkToggle: () -> Unit
 ) {
@@ -168,9 +197,9 @@ fun ViewerImageCard(
                 contentScale = ContentScale.FillWidth
             )
             IconButton(onClick = onBookmarkToggle) {
-                val icon = if(item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
-                val tint = if(item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                Icon(imageVector = icon, contentDescription = "Bookmark", tint = tint)
+                val icon = if (item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
+                val tint = if (item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(imageVector = icon, contentDescription = stringResource(id = R.string.content_desc_bookmark), tint = tint)
             }
         }
     }
