@@ -45,9 +45,7 @@ fun SearchScreen(
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
-    var isRefreshing by remember { mutableStateOf(false) }
     var textValue by remember { mutableStateOf(TextFieldValue(query)) }
-    val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -120,15 +118,11 @@ fun SearchScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
+                val isRefreshing = searchResults.loadState.refresh is LoadState.Loading
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = {
-                        isRefreshing = true
                         searchResults.refresh()
-                        coroutineScope.launch {
-                            delay(500)
-                            isRefreshing = false
-                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 ) {

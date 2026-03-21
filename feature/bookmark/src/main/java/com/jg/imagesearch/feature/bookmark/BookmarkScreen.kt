@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,8 +36,8 @@ fun BookmarkScreen(
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
     val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
-    var isSelectionMode by remember { mutableStateOf(false) }
-    val selectedItems = remember { mutableStateListOf<ImageItem>() }
+    var isSelectionMode by rememberSaveable { mutableStateOf(false) }
+    var selectedLinks by rememberSaveable { mutableStateOf(emptyList<String>()) }
 
     val configuration = LocalConfiguration.current
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
@@ -44,13 +45,14 @@ fun BookmarkScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isSelectionMode) stringResource(id = R.string.selected_items_count, selectedItems.size) else stringResource(id = R.string.my_bookmarks)) },
+                title = { Text(if (isSelectionMode) stringResource(id = R.string.selected_items_count, selectedLinks.size) else stringResource(id = R.string.my_bookmarks)) },
                 actions = {
                     if (isSelectionMode) {
                         IconButton(onClick = {
-                            viewModel.removeBookmarks(selectedItems.toList())
+                            val itemsToRemove = bookmarks.filter { selectedLinks.contains(it.link) }
+                            viewModel.removeBookmarks(itemsToRemove)
                             isSelectionMode = false
-                            selectedItems.clear()
+                            selectedLinks = emptyList()
                         }) {
                             Icon(Icons.Default.Delete, contentDescription = stringResource(id = R.string.action_delete))
                         }
@@ -81,17 +83,20 @@ fun BookmarkScreen(
                 contentPadding = PaddingValues(4.dp)
             ) {
                 items(bookmarks, key = { it.link }) { item ->
-                    val isSelected = selectedItems.contains(item)
+                    val isSelected = selectedLinks.contains(item.link)
                     BookmarkCard(
                         item = item,
                         isSelected = isSelected,
                         isSelectionMode = isSelectionMode,
                         onClick = {
                             if (isSelectionMode) {
-                                if (isSelected) selectedItems.remove(item)
-                                else selectedItems.add(item)
+                                selectedLinks = if (isSelected) {
+                                    selectedLinks - item.link
+                                } else {
+                                    selectedLinks + item.link
+                                }
                                 
-                                if (selectedItems.isEmpty()) {
+                                if (selectedLinks.isEmpty()) {
                                     isSelectionMode = false
                                 }
                             } else {
@@ -101,7 +106,7 @@ fun BookmarkScreen(
                         onLongClick = {
                             if (!isSelectionMode) {
                                 isSelectionMode = true
-                                selectedItems.add(item)
+                                selectedLinks = selectedLinks + item.link
                             }
                         }
                     )
