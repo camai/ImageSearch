@@ -20,28 +20,28 @@ class BookmarkRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addBookmark(imageItem: ImageItem): DataResult<Boolean, String> {
-        return try {
+        return runCatching {
             bookmarkDao.insertBookmark(imageItem.toEntity())
             DataResult.Success(true)
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             DataResult.Fail(e.message ?: "Unknown Error")
         }
     }
 
     override suspend fun removeBookmark(imageItem: ImageItem): DataResult<Boolean, String> {
-        return try {
+        return runCatching {
             bookmarkDao.deleteBookmark(imageItem.toEntity())
             DataResult.Success(true)
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             DataResult.Fail(e.message ?: "Unknown Error")
         }
     }
 
     override suspend fun removeBookmarks(imageItems: List<ImageItem>): DataResult<Boolean, String> {
-        return try {
+        return runCatching {
             bookmarkDao.deleteBookmarks(imageItems.map { it.toEntity() })
             DataResult.Success(true)
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             DataResult.Fail(e.message ?: "Unknown Error")
         }
     }

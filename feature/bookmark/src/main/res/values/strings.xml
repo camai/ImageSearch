@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_bookmarks">내 북마크</string>
+    <string name="selected_items_count">%1$d개 선택됨</string>
+    <string name="action_delete">삭제</string>
+    <string name="action_edit">편집</string>
+    <string name="empty_bookmarks">북마크된 이미지가 없습니다.</string>
+    <string name="selected_content_desc">Selected</string>
+</resources>

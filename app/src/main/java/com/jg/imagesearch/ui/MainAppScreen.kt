@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -23,11 +24,12 @@ import com.jg.imagesearch.core.model.ImageItem
 import com.google.gson.Gson
 import java.net.URLDecoder
 import java.net.URLEncoder
+import com.jg.imagesearch.R
 
-sealed class Screen(val route: String, val title: String) {
-    data object Search : Screen("search", "검색")
-    data object Bookmark : Screen("bookmark", "북마크")
-    data object Viewer : Screen("viewer/{imageItemJson}", "뷰어") {
+sealed class Screen(val route: String, val titleResId: Int) {
+    data object Search : Screen("search", R.string.nav_search)
+    data object Bookmark : Screen("bookmark", R.string.nav_bookmark)
+    data object Viewer : Screen("viewer/{imageItemJson}", R.string.nav_viewer) {
         fun createRoute(item: ImageItem): String {
             val json = Gson().toJson(item)
             val encodedConfig = URLEncoder.encode(json, "UTF-8")
@@ -56,10 +58,10 @@ fun MainAppScreen() {
                             icon = {
                                 Icon(
                                     imageVector = if (screen == Screen.Search) Icons.Default.Search else Icons.Default.Favorite,
-                                    contentDescription = screen.title
+                                    contentDescription = stringResource(id = screen.titleResId)
                                 )
                             },
-                            label = { Text(screen.title) },
+                            label = { Text(stringResource(id = screen.titleResId)) },
                             selected = currentRoute == screen.route,
                             onClick = {
                                 navController.navigate(screen.route) {
@@ -104,11 +106,9 @@ fun MainAppScreen() {
             ) { backStackEntry ->
                 val encodedJson = backStackEntry.arguments?.getString("imageItemJson") ?: ""
                 val decodedJson = URLDecoder.decode(encodedJson, "UTF-8")
-                val item = try {
+                val item = runCatching {
                     Gson().fromJson(decodedJson, ImageItem::class.java)
-                } catch (e: Exception) {
-                    null
-                }
+                }.getOrNull()
 
                 if (item != null) {
                     ViewerScreen(

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_hint">검색어를 입력하세요</string>
+    <string name="search_desc">검색</string>
+    <string name="clear_desc">지우기</string>
+    <string name="empty_search_prompt">검색어를 입력하여 이미지를 찾아보세요.</string>
+    <string name="bookmark_desc">Bookmark</string>
+</resources>

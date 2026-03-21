@@ -27,11 +27,11 @@ class ImageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getRandomImages(query: String, display: Int): DataResult<List<ImageItem>, String> {
-        return try {
+        return runCatching {
             val randomStart = Random.nextInt(1, 100)
             val response = api.searchImages(query = query, display = display, start = randomStart)
             DataResult.Success(response.items.map { it.toDomainModel() }.shuffled())
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             DataResult.Fail(e.message ?: "Unknown API Error")
         }
     }

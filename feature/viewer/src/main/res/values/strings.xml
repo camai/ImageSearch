@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_image_viewer">이미지 뷰어</string>
+    <string name="content_desc_back">뒤로가기</string>
+    <string name="pinch_zoom_hint">핀치하여 확대/축소 지원</string>
+    <string name="content_desc_bookmark">Bookmark</string>
+</resources>

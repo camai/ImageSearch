@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
+import com.jg.imagesearch.feature.viewer.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -43,10 +45,10 @@ fun ViewerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("이미지 뷰어") },
+                title = { Text(stringResource(id = R.string.title_image_viewer)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.content_desc_back))
                     }
                 }
             )
@@ -135,11 +137,11 @@ fun ZoomableImageCard(
                 ) {
                     val icon = if(item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
                     val tint = if(item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    Icon(imageVector = icon, contentDescription = "Bookmark", tint = tint)
+                    Icon(imageVector = icon, contentDescription = stringResource(id = R.string.content_desc_bookmark), tint = tint)
                 }
             }
             Text(
-                text = "핀치하여 확대/축소 지원",
+                text = stringResource(id = R.string.pinch_zoom_hint),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
             )

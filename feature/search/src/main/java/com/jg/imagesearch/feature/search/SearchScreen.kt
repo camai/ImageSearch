@@ -18,9 +18,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.layout.ContentScale
+import com.jg.imagesearch.feature.search.R
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,7 +43,7 @@ fun SearchScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     var isRefreshing by remember { mutableStateOf(false) }
-    var textValue by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(query)) }
+    var textValue by remember { mutableStateOf(TextFieldValue(query)) }
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
@@ -60,15 +63,15 @@ fun SearchScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("검색어를 입력하세요 (예: 만화)") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "검색") },
+                    placeholder = { Text(stringResource(id = R.string.search_hint)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(id = R.string.search_desc)) },
                     trailingIcon = {
                         if (textValue.text.isNotEmpty()) {
                             IconButton(onClick = { 
-                                textValue = androidx.compose.ui.text.input.TextFieldValue("")
+                                textValue = TextFieldValue("")
                                 viewModel.onQueryChanged("") 
                             }) {
-                                Icon(Icons.Default.Clear, contentDescription = "지우기")
+                                Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.clear_desc))
                             }
                         }
                     },
@@ -89,7 +92,7 @@ fun SearchScreen(
         ) {
             if (query.isBlank()) {
                 Text(
-                    text = "검색어를 입력하여 이미지를 찾아보세요.",
+                    text = stringResource(id = R.string.empty_search_prompt),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -170,7 +173,7 @@ fun SearchImageCard(
                     val tint = if(item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     Icon(
                         imageVector = icon,
-                        contentDescription = "Bookmark",
+                        contentDescription = stringResource(id = R.string.bookmark_desc),
                         tint = tint
                     )
                 }

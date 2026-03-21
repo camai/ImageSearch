@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.jg.imagesearch.feature.bookmark.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -38,7 +40,7 @@ fun BookmarkScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isSelectionMode) "${selectedItems.size}개 선택됨" else "내 북마크") },
+                title = { Text(if (isSelectionMode) stringResource(id = R.string.selected_items_count, selectedItems.size) else stringResource(id = R.string.my_bookmarks)) },
                 actions = {
                     if (isSelectionMode) {
                         IconButton(onClick = {
@@ -46,11 +48,11 @@ fun BookmarkScreen(
                             isSelectionMode = false
                             selectedItems.clear()
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = "삭제")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(id = R.string.action_delete))
                         }
                     } else if (bookmarks.isNotEmpty()) {
                         TextButton(onClick = { isSelectionMode = true }) {
-                            Text("편집")
+                            Text(stringResource(id = R.string.action_edit))
                         }
                     }
                 }
@@ -64,7 +66,7 @@ fun BookmarkScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "북마크된 이미지가 없습니다.", style = MaterialTheme.typography.bodyLarge)
+                Text(text = stringResource(id = R.string.empty_bookmarks), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             LazyVerticalGrid(
@@ -145,7 +147,7 @@ fun BookmarkCard(
                 if (isSelected) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Selected",
+                        contentDescription = stringResource(id = R.string.selected_content_desc),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .align(Alignment.TopEnd)

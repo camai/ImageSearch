@@ -11,7 +11,7 @@ class ImagePagingSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ImageItem> {
         val position = params.key ?: 1
-        return try {
+        return runCatching {
             val response = api.searchImages(
                 query = query,
                 display = params.loadSize,
@@ -30,7 +30,7 @@ class ImagePagingSource(
                 prevKey = if (position == 1) null else position - params.loadSize,
                 nextKey = nextKey
             )
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             LoadResult.Error(e)
         }
     }
