@@ -17,9 +17,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.jg.imagesearch.feature.bookmark.BookmarkScreen
-import com.jg.imagesearch.feature.search.SearchScreen
-import com.jg.imagesearch.feature.viewer.ViewerScreen
+import com.jg.imagesearch.feature.bookmark.BookmarkRoute
+import com.jg.imagesearch.feature.search.SearchRoute
+import com.jg.imagesearch.feature.viewer.ViewerRoute
 import com.jg.imagesearch.core.model.ImageItem
 import com.google.gson.Gson
 import java.net.URLDecoder
@@ -87,14 +87,14 @@ fun MainAppScreen() {
                 .consumeWindowInsets(innerPadding)
         ) {
             composable(Screen.Search.route) {
-                SearchScreen(
+                SearchRoute(
                     onNavigateToViewer = { item ->
                         navController.navigate(Screen.Viewer.createRoute(item))
                     }
                 )
             }
             composable(Screen.Bookmark.route) {
-                BookmarkScreen(
+                BookmarkRoute(
                     onNavigateToViewer = { item ->
                         navController.navigate(Screen.Viewer.createRoute(item))
                     }
@@ -111,7 +111,7 @@ fun MainAppScreen() {
                 }.getOrNull()
 
                 if (item != null) {
-                    ViewerScreen(
+                    ViewerRoute(
                         selectedItem = item,
                         onBack = { navController.popBackStack() }
                     )

@@ -2,7 +2,6 @@ package com.jg.imagesearch.feature.bookmark
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -18,24 +17,43 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.platform.LocalConfiguration
-import com.jg.imagesearch.feature.bookmark.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ──────────────────────────────────────────────
+// Route (Stateful) — ViewModel 의존, 상태 수집
+// ──────────────────────────────────────────────
 @Composable
-fun BookmarkScreen(
+fun BookmarkRoute(
     viewModel: BookmarkViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
     val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
+
+    BookmarkScreen(
+        bookmarks = bookmarks,
+        onRemoveBookmarks = viewModel::removeBookmarks,
+        onNavigateToViewer = onNavigateToViewer
+    )
+}
+
+// ──────────────────────────────────────────────
+// Screen (Stateless) — 순수 UI, Preview 가능
+// ──────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookmarkScreen(
+    bookmarks: List<ImageItem>,
+    onRemoveBookmarks: (List<ImageItem>) -> Unit,
+    onNavigateToViewer: (ImageItem) -> Unit
+) {
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
     var selectedLinks by rememberSaveable { mutableStateOf(emptyList<String>()) }
 
@@ -45,12 +63,17 @@ fun BookmarkScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isSelectionMode) stringResource(id = R.string.selected_items_count, selectedLinks.size) else stringResource(id = R.string.my_bookmarks)) },
+                title = {
+                    Text(
+                        if (isSelectionMode) stringResource(id = R.string.selected_items_count, selectedLinks.size)
+                        else stringResource(id = R.string.my_bookmarks)
+                    )
+                },
                 actions = {
                     if (isSelectionMode) {
                         IconButton(onClick = {
                             val itemsToRemove = bookmarks.filter { selectedLinks.contains(it.link) }
-                            viewModel.removeBookmarks(itemsToRemove)
+                            onRemoveBookmarks(itemsToRemove)
                             isSelectionMode = false
                             selectedLinks = emptyList()
                         }) {
@@ -95,7 +118,6 @@ fun BookmarkScreen(
                                 } else {
                                     selectedLinks + item.link
                                 }
-                                
                                 if (selectedLinks.isEmpty()) {
                                     isSelectionMode = false
                                 }
@@ -116,6 +138,9 @@ fun BookmarkScreen(
     }
 }
 
+// ──────────────────────────────────────────────
+// Sub-Component — UiState 직접 전달
+// ──────────────────────────────────────────────
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookmarkCard(
@@ -145,7 +170,7 @@ fun BookmarkCard(
                     .aspectRatio(1f),
                 contentScale = ContentScale.Crop
             )
-            
+
             if (isSelectionMode) {
                 Box(
                     modifier = Modifier

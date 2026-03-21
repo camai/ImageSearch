@@ -17,37 +17,57 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.layout.ContentScale
-import com.jg.imagesearch.feature.search.R
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.jg.imagesearch.core.model.ImageItem
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ──────────────────────────────────────────────
+// Route (Stateful) — ViewModel 의존, 상태 수집
+// ──────────────────────────────────────────────
 @Composable
-fun SearchScreen(
+fun SearchRoute(
     viewModel: SearchViewModel = hiltViewModel(),
     onNavigateToViewer: (ImageItem) -> Unit
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
+
+    SearchScreen(
+        query = query,
+        searchResults = searchResults,
+        onQueryChanged = viewModel::onQueryChanged,
+        onBookmarkToggle = viewModel::toggleBookmark,
+        onNavigateToViewer = onNavigateToViewer
+    )
+}
+
+// ──────────────────────────────────────────────
+// Screen (Stateless) — 순수 UI, Preview 가능
+// ──────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(
+    query: String,
+    searchResults: LazyPagingItems<ImageItem>,
+    onQueryChanged: (String) -> Unit,
+    onBookmarkToggle: (ImageItem) -> Unit,
+    onNavigateToViewer: (ImageItem) -> Unit
+) {
     var textValue by remember { mutableStateOf(TextFieldValue(query)) }
     val focusManager = LocalFocusManager.current
-
     val snackbarHostState = remember { SnackbarHostState() }
     val configuration = LocalConfiguration.current
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
@@ -78,7 +98,7 @@ fun SearchScreen(
                     value = textValue,
                     onValueChange = { newValue ->
                         textValue = newValue
-                        viewModel.onQueryChanged(newValue.text)
+                        onQueryChanged(newValue.text)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -87,9 +107,9 @@ fun SearchScreen(
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(id = R.string.search_desc)) },
                     trailingIcon = {
                         if (textValue.text.isNotEmpty()) {
-                            IconButton(onClick = { 
+                            IconButton(onClick = {
                                 textValue = TextFieldValue("")
-                                viewModel.onQueryChanged("") 
+                                onQueryChanged("")
                             }) {
                                 Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.clear_desc))
                             }
@@ -121,9 +141,7 @@ fun SearchScreen(
                 val isRefreshing = searchResults.loadState.refresh is LoadState.Loading
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = {
-                        searchResults.refresh()
-                    },
+                    onRefresh = { searchResults.refresh() },
                     modifier = Modifier.fillMaxSize()
                 ) {
                     LazyVerticalGrid(
@@ -150,29 +168,29 @@ fun SearchScreen(
                             ) { index ->
                                 searchResults[index]?.let { item ->
                                     SearchImageCard(
-                                    item = item,
-                                    onClick = {
-                                        focusManager.clearFocus()
-                                        onNavigateToViewer(item)
-                                    },
-                                    onBookmarkToggle = { viewModel.toggleBookmark(item) }
-                                )
+                                        item = item,
+                                        onClick = {
+                                            focusManager.clearFocus()
+                                            onNavigateToViewer(item)
+                                        },
+                                        onBookmarkToggle = { onBookmarkToggle(item) }
+                                    )
+                                }
+                            }
+
+                            if (searchResults.loadState.append is LoadState.Loading) {
+                                items(columns) {
+                                    Card(
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .fillMaxWidth()
+                                            .aspectRatio(1f)
+                                            .shimmerEffect(),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    ) {}
+                                }
                             }
                         }
-                        
-                        if (searchResults.loadState.append is LoadState.Loading) {
-                            items(columns) {
-                                Card(
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                        .fillMaxWidth()
-                                        .aspectRatio(1f)
-                                        .shimmerEffect(),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                ) {}
-                            }
-                        }
-                        } // end of else
                     }
                 }
             }
@@ -180,6 +198,9 @@ fun SearchScreen(
     }
 }
 
+// ──────────────────────────────────────────────
+// Sub-Component — UiState(ImageItem) 직접 전달
+// ──────────────────────────────────────────────
 @Composable
 fun SearchImageCard(
     item: ImageItem,
@@ -204,8 +225,8 @@ fun SearchImageCard(
                     contentScale = ContentScale.Crop
                 )
                 IconButton(onClick = onBookmarkToggle) {
-                    val icon = if(item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
-                    val tint = if(item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    val icon = if (item.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
+                    val tint = if (item.isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     Icon(
                         imageVector = icon,
                         contentDescription = stringResource(id = R.string.bookmark_desc),
