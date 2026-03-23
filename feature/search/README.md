@@ -40,12 +40,16 @@ sequenceDiagram
 | Shimmer 로딩 | 스켈레톤 UI로 로딩 상태 표시 |
 | 적응형 그리드 | 화면 폭 ≥600dp → 4열, 그 외 2열 |
 | 북마크 토글 | 검색 결과에서 즉시 북마크 추가/제거 |
+| 다중 선택 북마크 | Long Press로 선택 모드 진입, 복수 항목 일괄 북마크 추가 |
+| 에러 상태 표시 | 로컬 검색 실패 시 에러 메시지 + Retry 버튼 표시 |
 | Snackbar 에러 | 네트워크 에러 시 Retry 액션 제공 |
 
 ## 파일 구성
 
 | 파일 | 역할 |
 |---|---|
-| `SearchScreen.kt` | SearchRoute + SearchScreen + SearchImageCard |
-| `SearchViewModel.kt` | 검색 쿼리 관리, Paging + Bookmark 상태 결합 |
+| `MainScreen.kt` | MainRoute + MainScreen — 메인 탭 (만화 자동 로드, 다중 선택 북마크) |
+| `MainViewModel.kt` | 검색 결과 + 북마크 상태 결합, 일괄 북마크 추가 |
+| `SearchScreen.kt` | SearchRoute + SearchScreen + SearchImageCard — 로컬 검색 (에러 상태 포함) |
+| `SearchViewModel.kt` | 로컬 검색 쿼리 관리, Paging + Bookmark 상태 결합 |
 | `ShimmerEffect.kt` | 로딩 애니메이션 Modifier 확장 |
