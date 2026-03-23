@@ -47,7 +47,6 @@ class SearchViewModel @Inject constructor(
                     }
                 }
         }
-        .cachedIn(viewModelScope)
 
     fun onQueryChanged(newQuery: String) {
         _query.value = newQuery

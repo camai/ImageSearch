@@ -25,14 +25,14 @@ class MainViewModel @Inject constructor(
     private val toggleBookmarkUseCase: ToggleBookmarkUseCase
 ) : ViewModel() {
 
-    val searchResults: Flow<PagingData<ImageItem>> = searchImagesUseCase("만화")
+    val searchResults: Flow<PagingData<ImageItem>> = searchImagesUseCase()
+        .cachedIn(viewModelScope)
         .combine(getBookmarksUseCase()) { pagingData, bookmarks ->
             val bookmarkLinks = bookmarks.map { it.link }.toSet()
             pagingData.map { item ->
                 item.copy(isBookmarked = bookmarkLinks.contains(item.link))
             }
         }
-        .cachedIn(viewModelScope)
 
     // _uiEffect is moved down here to keep variables together
     private val _uiEffect = MutableSharedFlow<UiEffect>()

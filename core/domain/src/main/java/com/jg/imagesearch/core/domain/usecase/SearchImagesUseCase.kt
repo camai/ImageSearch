@@ -5,5 +5,9 @@ import com.jg.imagesearch.core.model.ImageItem
 import kotlinx.coroutines.flow.Flow
 
 interface SearchImagesUseCase {
-    operator fun invoke(query: String): Flow<PagingData<ImageItem>>
+    operator fun invoke(query: String = DEFAULT_QUERY): Flow<PagingData<ImageItem>>
+
+    companion object {
+        const val DEFAULT_QUERY = "만화"
+    }
 }
