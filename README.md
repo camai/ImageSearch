@@ -104,6 +104,10 @@ ImageSearch/
 | **Paging3** | 3.3.2 | 무한 스크롤 페이징 + RemoteMediator 오프라인 캐싱 |
 | **Coil** | 2.7.0 | 이미지 로딩 및 메모리/디스크 캐싱 |
 | **Gson** | 2.10.1 | Navigation 인자로 ImageItem 직렬화 전달 |
+| **MockK** | 1.13.12 | Kotlin 친화적 Mocking 프레임워크 (단위 테스트) |
+| **Turbine** | 1.2.0 | Flow/SharedFlow 테스트 유틸리티 |
+| **Coroutines Test** | 1.9.0 | `runTest`, `StandardTestDispatcher` 기반 코루틴 테스트 |
+| **Paging Test** | 3.3.6 | PagingData 단위 테스트 지원 |
 
 ---
 
@@ -117,10 +121,13 @@ ImageSearch/
 - `imagesearch.android.network` — BuildConfig 기반 API 키/URL 주입
 
 ### Compose 최적화
+- **`@Immutable` 어노테이션**: `ImageItem` 데이터 클래스에 적용하여 Compose 컴파일러에 안정성(Stability) 보장, Smart Recomposition 활성화
+- **안정적 상태 타입**: 다중 선택 상태를 `List<ImageItem>` 대신 `Set<String>`(link 기반)으로 관리하여 불필요한 리컴포지션 방지
 - **`itemKey` / `itemContentType`**: Paging3 LazyGrid에 안정적 키를 제공하여 불필요한 리컴포지션 차단
 - **`graphicsLayer`**: 핀치 줌 애니메이션에서 Composition/Layout 단계를 건너뛰고 Draw만 갱신
 - **`rememberSaveable`**: Configuration Change(화면 회전) 시 UI 상태 보존
 - **Route-Screen 분리**: ViewModel 의존성을 Route에 격리하여 Screen의 재사용성과 테스트 용이성 확보
+- **중복 캐싱 제거**: `cachedIn(viewModelScope)` 단일 호출로 PagingData 캐싱 최적화
 
 ### 오프라인 캐싱 전략 및 로컬 검색 (Local Filtering)
 - **SSOT (Single Source of Truth)**: `RemoteMediator`가 API 응답을 Room에 캐싱하고, 모든 페이징은 Room에서만 이루어짐
@@ -156,3 +163,37 @@ ImageSearch/
 - **Thumbnail vs Original**: 검색 그리드에서는 `thumbnail` (저해상도), 뷰어에서는 `link` (원본 URL)을 로드하여 대역폭 최적화
 - **Lazy Loading**: Paging3의 `pageSize=50`으로 한 번에 50개씩 점진적 로딩
 - **메모리 누수 방지**: `cachedIn(viewModelScope)`으로 PagingData를 ViewModel 범위에 바인딩
+
+---
+
+## 테스트
+
+JUnit4 + MockK + Turbine 기반의 단위 테스트를 구성하여 UseCase 및 ViewModel의 성공/실패 시나리오를 검증합니다.
+
+### 테스트 전략
+- **UseCase 테스트**: Repository를 MockK으로 대체하여 비즈니스 로직만 검증
+- **ViewModel 테스트**: UseCase를 MockK으로 대체하고, `StandardTestDispatcher`로 코루틴 제어, Turbine으로 Flow/SharedFlow 수집 검증
+- **실패 케이스 포함**: 모든 테스트 대상에 대해 성공 경로와 실패 경로를 함께 작성
+- **한글 테스트 네이밍**: 백틱(`` ` ``) 기반으로 테스트 의도를 한국어로 명시
+
+### 테스트 커버리지
+
+| 모듈 | 테스트 클래스 | 테스트 수 | 주요 검증 항목 |
+|---|---|---|---|
+| `:core:domain` | `ToggleBookmarkUseCaseImplTest` | 4 | 북마크 추가/제거 성공, DB 실패 시 Fail 반환 |
+| `:core:domain` | `RemoveBookmarksUseCaseImplTest` | 3 | 다건 삭제 성공, 빈 리스트, 삭제 실패 |
+| `:core:domain` | `GetRandomImagesUseCaseImplTest` | 3 | 랜덤 이미지 조회 성공, API 실패, 빈 결과 |
+| `:feature:search` | `MainViewModelTest` | 6 | 북마크 토글 성공/실패, 다중 북마크 필터/일부 실패 |
+| `:feature:search` | `SearchViewModelTest` | 5 | 초기 쿼리 상태, 쿼리 변경, 북마크 토글 성공/실패 |
+| `:feature:bookmark` | `BookmarkViewModelTest` | 4 | Flow 수집, 빈 리스트, 삭제 성공/실패 |
+| `:feature:viewer` | `ViewerViewModelTest` | 5 | 초기화 성공/실패, 중복 초기화 무시, 북마크 토글 |
+| **합계** | **7개 클래스** | **30개** | |
+
+### 테스트 실행
+
+```bash
+./gradlew :core:domain:testDebugUnitTest \
+          :feature:search:testDebugUnitTest \
+          :feature:bookmark:testDebugUnitTest \
+          :feature:viewer:testDebugUnitTest
+```
