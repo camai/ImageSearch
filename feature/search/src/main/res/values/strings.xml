@@ -8,6 +8,12 @@
     <string name="local_search_back">뒤로가기</string>
     <string name="local_search_empty_prompt">로드된 데이터 탭에서 제목을 검색해보세요.</string>
     <string name="local_search_empty_result">검색 결과가 없습니다.</string>
+    <string name="local_search_error_message">검색 중 오류가 발생했습니다.</string>
+    <string name="action_retry">다시 시도</string>
+    <string name="selected_count_format">%1$d개 선택됨</string>
+    <string name="action_bookmark_selected">북마크 추가</string>
+    <string name="action_cancel_selection">선택 취소</string>
+    <string name="msg_bookmarks_added">%1$s개를 북마크에 추가했습니다.</string>
     <string name="bookmark_desc">Bookmark</string>
     <string name="msg_bookmark_added">북마크에 추가했습니다.</string>
     <string name="msg_bookmark_removed">북마크를 해제했습니다.</string>

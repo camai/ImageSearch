@@ -13,9 +13,11 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -150,6 +152,20 @@ private fun LocalSearchScreen(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            } else if (searchResults.loadState.refresh is LoadState.Error) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.local_search_error_message),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    TextButton(onClick = { searchResults.retry() }) {
+                        Text(stringResource(id = R.string.action_retry))
+                    }
+                }
             } else if (searchResults.loadState.refresh is LoadState.NotLoading && searchResults.itemCount == 0) {
                 Text(
                     text = stringResource(id = R.string.local_search_empty_result),
