@@ -14,13 +14,10 @@ import com.jg.imagesearch.core.model.SnackbarMessage
 import com.jg.imagesearch.core.model.SnackbarType
 import com.jg.imagesearch.core.model.UiEffect
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val searchImagesUseCase: SearchImagesUseCase,
@@ -28,16 +25,12 @@ class MainViewModel @Inject constructor(
     private val toggleBookmarkUseCase: ToggleBookmarkUseCase
 ) : ViewModel() {
 
-    val searchResults: Flow<PagingData<ImageItem>> = flowOf("만화")
-        .flatMapLatest { q ->
-            searchImagesUseCase(q)
-                .cachedIn(viewModelScope)
-                .combine(getBookmarksUseCase()) { pagingData, bookmarks ->
-                    val bookmarkLinks = bookmarks.map { it.link }.toSet()
-                    pagingData.map { item ->
-                        item.copy(isBookmarked = bookmarkLinks.contains(item.link))
-                    }
-                }
+    val searchResults: Flow<PagingData<ImageItem>> = searchImagesUseCase("만화")
+        .combine(getBookmarksUseCase()) { pagingData, bookmarks ->
+            val bookmarkLinks = bookmarks.map { it.link }.toSet()
+            pagingData.map { item ->
+                item.copy(isBookmarked = bookmarkLinks.contains(item.link))
+            }
         }
         .cachedIn(viewModelScope)
 
@@ -62,10 +55,16 @@ class MainViewModel @Inject constructor(
     fun bookmarkAll(items: List<ImageItem>) {
         viewModelScope.launch {
             val targets = items.filter { !it.isBookmarked }
-            targets.forEach { item -> toggleBookmarkUseCase(item) }
-            if (targets.isNotEmpty()) {
+            var successCount = 0
+            targets.forEach { item ->
+                when (toggleBookmarkUseCase(item)) {
+                    is DomainResult.Success -> successCount++
+                    is DomainResult.Fail -> { /* 개별 실패 무시, 성공 건수만 추적 */ }
+                }
+            }
+            if (successCount > 0) {
                 _uiEffect.emit(
-                    UiEffect.ShowSnackbar(SnackbarMessage.BOOKMARKS_ADDED, listOf("${targets.size}"), SnackbarType.SUCCESS)
+                    UiEffect.ShowSnackbar(SnackbarMessage.BOOKMARKS_ADDED, listOf("$successCount"), SnackbarType.SUCCESS)
                 )
             }
         }

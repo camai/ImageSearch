@@ -97,7 +97,7 @@ private fun ViewerScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-                itemsIndexed(images, key = { index, item -> "${item.link}_$index" }) { index, item ->
+                itemsIndexed(images, key = { _, item -> item.link }) { index, item ->
                     if (index == 0) {
                         ZoomableImageCard(
                             item = item,

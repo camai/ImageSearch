@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkAdd
+
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
@@ -94,7 +94,7 @@ private fun MainScreen(
     val columns = if (configuration.screenWidthDp >= 600) 4 else 2
 
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
-    var selectedItems by rememberSaveable { mutableStateOf(emptyList<ImageItem>()) }
+    var selectedLinks by rememberSaveable { mutableStateOf(emptySet<String>()) }
 
     LaunchedEffect(searchResults.loadState.refresh) {
         val refreshState = searchResults.loadState.refresh
@@ -116,7 +116,7 @@ private fun MainScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (isSelectionMode) stringResource(R.string.selected_count_format, selectedItems.size)
+                        if (isSelectionMode) stringResource(R.string.selected_count_format, selectedLinks.size)
                         else stringResource(id = R.string.nav_main)
                     )
                 },
@@ -124,7 +124,7 @@ private fun MainScreen(
                     if (isSelectionMode) {
                         IconButton(onClick = {
                             isSelectionMode = false
-                            selectedItems = emptyList()
+                            selectedLinks = emptySet()
                         }) {
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_cancel_selection))
                         }
@@ -134,13 +134,16 @@ private fun MainScreen(
                     if (isSelectionMode) {
                         IconButton(
                             onClick = {
-                                onBookmarkAll(selectedItems)
+                                val items = (0 until searchResults.itemCount)
+                                    .mapNotNull { searchResults.peek(it) }
+                                    .filter { it.link in selectedLinks }
+                                onBookmarkAll(items)
                                 isSelectionMode = false
-                                selectedItems = emptyList()
+                                selectedLinks = emptySet()
                             },
-                            enabled = selectedItems.isNotEmpty()
+                            enabled = selectedLinks.isNotEmpty()
                         ) {
-                            Icon(Icons.Default.BookmarkAdd, contentDescription = stringResource(R.string.action_bookmark_selected))
+                            Icon(Icons.Default.Favorite, contentDescription = stringResource(R.string.action_bookmark_selected))
                         }
                     } else {
                         IconButton(onClick = onNavigateToLocalSearch) {
@@ -164,7 +167,7 @@ private fun MainScreen(
                 isRefreshing = isRefreshing,
                 onRefresh = {
                     isSelectionMode = false
-                    selectedItems = emptyList()
+                    selectedLinks = emptySet()
                     searchResults.refresh()
                 },
                 modifier = Modifier.fillMaxSize()
@@ -190,7 +193,7 @@ private fun MainScreen(
                             contentType = searchResults.itemContentType { "image" }
                         ) { index ->
                             searchResults[index]?.let { item ->
-                                val isSelected = selectedItems.any { it.link == item.link }
+                                val isSelected = item.link in selectedLinks
                                 MainImageCard(
                                     item = item,
                                     isSelectionMode = isSelectionMode,
@@ -198,12 +201,12 @@ private fun MainScreen(
                                     onClick = {
                                         focusManager.clearFocus()
                                         if (isSelectionMode) {
-                                            selectedItems = if (isSelected) {
-                                                selectedItems.filter { it.link != item.link }
+                                            selectedLinks = if (isSelected) {
+                                                selectedLinks - item.link
                                             } else {
-                                                selectedItems + item
+                                                selectedLinks + item.link
                                             }
-                                            if (selectedItems.isEmpty()) isSelectionMode = false
+                                            if (selectedLinks.isEmpty()) isSelectionMode = false
                                         } else {
                                             onNavigateToViewer(item)
                                         }
@@ -211,7 +214,7 @@ private fun MainScreen(
                                     onLongClick = {
                                         if (!isSelectionMode) {
                                             isSelectionMode = true
-                                            selectedItems = listOf(item)
+                                            selectedLinks = setOf(item.link)
                                         }
                                     },
                                     onBookmarkToggle = { onBookmarkToggle(item) }

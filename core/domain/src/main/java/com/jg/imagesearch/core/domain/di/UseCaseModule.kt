@@ -41,4 +41,10 @@ abstract class UseCaseModule {
     abstract fun bindGetRandomImagesUseCase(
         impl: GetRandomImagesUseCaseImpl
     ): GetRandomImagesUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindSearchLocalImagesUseCase(
+        impl: SearchLocalImagesUseCaseImpl
+    ): SearchLocalImagesUseCase
 }
