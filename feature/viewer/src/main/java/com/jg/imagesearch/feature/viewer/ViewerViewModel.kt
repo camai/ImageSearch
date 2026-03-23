@@ -59,9 +59,9 @@ class ViewerViewModel @Inject constructor(
                 .take(20)
                 .ifBlank { defaultQuery }
 
-            when (val result = getRandomImagesUseCase(relatedQuery, 30)) {
+            when (val result = getRandomImagesUseCase(relatedQuery, 50)) {
                 is DomainResult.Success -> {
-                    val filtered = result.data.filter { it.link != selectedItem.link }.take(30)
+                    val filtered = result.data.filter { it.link != selectedItem.link }.take(50)
                     _rawImages.value = listOf(selectedItem) + filtered
                 }
                 is DomainResult.Fail -> {

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -59,7 +60,7 @@ fun MainAppScreen() {
                         NavigationBarItem(
                             icon = {
                                 Icon(
-                                    imageVector = if (screen == Screen.Main) Icons.Default.Search else Icons.Default.Favorite,
+                                    imageVector = if (screen == Screen.Main) Icons.Default.Home else Icons.Default.Favorite,
                                     contentDescription = stringResource(id = screen.titleResId)
                                 )
                             },

@@ -58,4 +58,16 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
+    fun bookmarkAll(items: List<ImageItem>) {
+        viewModelScope.launch {
+            val targets = items.filter { !it.isBookmarked }
+            targets.forEach { item -> toggleBookmarkUseCase(item) }
+            if (targets.isNotEmpty()) {
+                _uiEffect.emit(
+                    UiEffect.ShowSnackbar(SnackbarMessage.BOOKMARKS_ADDED, listOf("${targets.size}"), SnackbarType.SUCCESS)
+                )
+            }
+        }
+    }
 }
